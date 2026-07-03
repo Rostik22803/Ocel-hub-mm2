@@ -208,49 +208,51 @@ CollapseButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- РЕАЛЬНЫЙ ТАЙМЕР РАУНДА И ЛОББИ MM2
+-- 100% СЧИТЫВАНИЕ ТАЙМЕРА ИЗ ИНТЕРФЕЙСА ИГРЫ (Оригинальный MM2)
 local TimerActive = false
 local timerCoroutine = nil
 
-local function FormatTime(seconds)
-    if not seconds or seconds <= 0 then return "00:00" end
-    local mins = math.floor(seconds / 60)
-    local secs = math.floor(seconds % 60)
-    return string.format("%02d:%02d", mins, secs)
-end
-
-local function GetMM2Time()
-    local repl = game:GetService("ReplicatedStorage")
+local function GetMM2GuiTime()
+    local player = game:GetService("Players").LocalPlayer
+    local pGui = player:FindFirstChild("PlayerGui")
     
-    local timerToClose = repl:FindFirstChild("TimerToClose")
-    local roundTimer = repl:FindFirstChild("RoundTimer")
-    local lobbyTimer = repl:FindFirstChild("LobbyTimer")
-    
-    if timerToClose and timerToClose.Value and tonumber(timerToClose.Value) > 0 then
-        return tonumber(timerToClose.Value), "Game"
-    end
-    if roundTimer and roundTimer.Value and tonumber(roundTimer.Value) > 0 then
-        return tonumber(roundTimer.Value), "Game"
-    end
-    if lobbyTimer and lobbyTimer.Value and tonumber(lobbyTimer.Value) > 0 then
-        return tonumber(lobbyTimer.Value), "Lobby"
-    end
-
-    local remotes = repl:FindFirstChild("Remotes")
-    local gameplay = remotes and remotes:FindFirstChild("Gameplay")
-    if gameplay then
-        local remoteRoundTimer = gameplay:FindFirstChild("RoundTimer")
-        local remoteLobbyTimer = gameplay:FindFirstChild("LobbyTimer") or gameplay:FindFirstChild("Timer")
+    -- Ищем основной GUI интерфейс MM2
+    local mainGui = pGui and (pGui:FindFirstChild("MainGui") or pGui:FindFirstChild("ManiGui") or pGui:FindFirstChild("GameGui"))
+    if mainGui then
+        -- Путь 1: Верхняя панель (Обычное отображение времени)
+        local topBar = mainGui:FindFirstChild("TopList") or mainGui:FindFirstChild("TopBar") or mainGui:FindFirstChild("Container")
+        local timerLabel = topBar and (topBar:FindFirstChild("Timer") or topBar:FindFirstChild("TimeLabel") or topBar:FindFirstChild("Duration"))
         
-        if remoteRoundTimer and remoteRoundTimer.Value and tonumber(remoteRoundTimer.Value) > 0 then
-            return tonumber(remoteRoundTimer.Value), "Game"
+        -- Путь 2: Альтернативный поиск по всем элементам, если интерфейс кастомный
+        if not timerLabel then
+            for _, v in ipairs(mainGui:GetDescendants()) do
+                if v:IsA("TextLabel") and (v.Name:lower():find("timer") or v.Name:lower():find("time")) and v.Visible then
+                    timerLabel = v
+                    break
+                end
+            end
         end
-        if remoteLobbyTimer and remoteLobbyTimer.Value and tonumber(remoteLobbyTimer.Value) > 0 then
-            return tonumber(remoteLobbyTimer.Value), "Lobby"
+        
+        if timerLabel and timerLabel.Text ~= "" then
+            local text = timerLabel.Text
+            -- Если текст содержит "Прерывание" или "Выбор", определяем как лобби
+            if text:find(":") then
+                return text
+            else
+                return "Time: " .. text
+            end
         end
     end
     
-    return nil, nil
+    -- Резервный поиск через ReplicatedStorage (если GUI еще не прогрузился)
+    local repl = game:GetService("ReplicatedStorage")
+    local tToClose = repl:FindFirstChild("TimerToClose") or repl:FindFirstChild("RoundTimer") or repl:FindFirstChild("LobbyTimer")
+    if tToClose and tonumber(tToClose.Value) then
+        local sec = tonumber(tToClose.Value)
+        return string.format("%02d:%02d", math.floor(sec/60), sec%60)
+    end
+
+    return nil
 end
 
 TimerButton.MouseButton1Click:Connect(function()
@@ -261,26 +263,16 @@ TimerButton.MouseButton1Click:Connect(function()
         TimerWindow.Visible = true
         
         timerCoroutine = task.spawn(function()
-            local lastValidTime = 0
             while TimerActive do
-                local serverTime, state = GetMM2Time()
+                local currentDisplayTime = GetMM2GuiTime()
                 
-                if serverTime then
-                    lastValidTime = serverTime
-                    if state == "Lobby" then
-                        TimerTextLabel.Text = "Lobby: " .. FormatTime(serverTime)
-                    else
-                        TimerTextLabel.Text = "Round: " .. FormatTime(serverTime)
-                    end
+                if currentDisplayTime then
+                    -- Автоматически подрезаем лишние слова, если игра пишет "Time Left: 01:20"
+                    TimerTextLabel.Text = currentDisplayTime
                 else
-                    if lastValidTime > 0 then
-                        lastValidTime = lastValidTime - 1
-                        TimerTextLabel.Text = "Intermission: " .. FormatTime(lastValidTime)
-                    else
-                        TimerTextLabel.Text = "Waiting..."
-                    end
+                    TimerTextLabel.Text = "Searching..."
                 end
-                task.wait(1)
+                task.wait(0.5) -- Быстрое и легкое обновление без лагов
             end
         end)
     else
