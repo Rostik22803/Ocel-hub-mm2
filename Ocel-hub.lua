@@ -45,7 +45,7 @@ local UICornerBgBtn = Instance.new("UICorner")
 local TxtColorButton = Instance.new("TextButton")
 local UICornerTxtBtn = Instance.new("UICorner")
 
--- Фрейм палитры
+-- Фрейм палитиры
 local PaletteFrame = Instance.new("Frame")
 local UIGridLayout = Instance.new("UIGridLayout")
 local PaletteCorner = Instance.new("UICorner")
@@ -54,7 +54,7 @@ ScreenGui.Name = "MM2_Ultimate_v5"
 ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
--- ГЛАВНОЕ МЕНЮ (Высота увеличена до 505, чтобы ползунки стояли просторно)
+-- ГЛАВНОЕ МЕНЮ
 local MainFrameHeight = 505
 Frame.Parent = ScreenGui
 Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -117,7 +117,7 @@ ApplyButtonStyles(AntiFlingButton, UICornerFling, "ANTI-FLING", 120)
 ApplyButtonStyles(PickupButton, UICornerPickup, "AUTOPICKUP", 160)
 ApplyButtonStyles(KillAuraButton, UICornerKillAura, "KILL AURA", 200)
 
--- НАСТРОЙКИ ФУНКЦИЙ ГЕЙМПЛЕЯ И ДЕФОЛТЫ СЛАЙДЕРОВ
+-- НАСТРОЙКИ ФУНКЦИЙ ГЕЙМПЛЕЯ И ДЕФОЛТЫ
 _G.ChamsActive = false
 _G.SilentAimActive = false
 _G.NoclipActive = false
@@ -125,10 +125,10 @@ _G.AntiFlingActive = false
 _G.AutoPickupActive = false
 _G.KillAuraActive = false
 
-_G.KillAuraRange = 15     -- Старт дистанция
-_G.KillAuraDelay = 0.1    -- Старт задержка
+_G.KillAuraRange = 15     
+_G.KillAuraDelay = 0.1    
 
--- СТИЛИЗАЦИЯ ПОЛЗУНКОВ
+-- ФУНКЦИЯ СОЗДАНИЯ И СТАБИЛИЗАЦИИ ПОЛЗУНКОВ
 local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, btnCorner, text, yPos, currentVal, minVal, maxVal, isDecimal)
     bgFrame.Parent = ContentContainer
     bgFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
@@ -163,43 +163,46 @@ local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, 
     btnCorner.CornerRadius = UDim.new(1, 0)
     btnCorner.Parent = btn
 
-    -- Логика перетаскивания ползунка
-    local UserInputService = game:GetService("UserInputService")
     local dragging = false
 
-    btn.MouseButton1Down:Connect(function()
-        dragging = true
-    end)
+    local function UpdateSliderPosition(inputX)
+        local barAbsolutePos = barFrame.AbsolutePosition.X
+        local barAbsoluteSize = barFrame.AbsoluteSize.X
+        local relativeX = math.clamp((inputX - barAbsolutePos) / barAbsoluteSize, 0, 1)
+        
+        btn.Position = UDim2.new(relativeX, -5, 0.5, -5)
+        
+        local val = minVal + (relativeX * (maxVal - minVal))
+        if isDecimal then
+            val = math.round(val * 100) / 100
+            _G.KillAuraDelay = val
+        else
+            val = math.round(val)
+            _G.KillAuraRange = val
+        end
+        label.Text = text .. ": " .. tostring(val)
+    end
 
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local barAbsolutePos = barFrame.AbsolutePosition.X
-            local barAbsoluteSize = barFrame.AbsoluteSize.X
-            local mouseX = input.Position.X
-            local relativeX = math.clamp((mouseX - barAbsolutePos) / barAbsoluteSize, 0, 1)
-            
-            btn.Position = UDim2.new(relativeX, -5, 0.5, -5)
-            
-            local val = minVal + (relativeX * (maxVal - minVal))
-            if isDecimal then
-                val = math.round(val * 100) / 100 -- 2 знака после запятой для задержки
-                _G.KillAuraDelay = val
-            else
-                val = math.round(val) -- Целые числа для дистанции
-                _G.KillAuraRange = val
-            end
-            label.Text = text .. ": " .. tostring(val)
+    btn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
         end
     end)
 
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    game:GetService("UserInputService").InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
+        end
+    end)
+
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            UpdateSliderPosition(input.Position.X)
         end
     end)
 end
 
--- Инициализируем ползунки (Range: 5-50, Delay: 0.01-0.5)
+-- Инициализация ползунков
 CreateSlider(RangeSliderFrame, RangeSliderBar, RangeSliderButton, RangeSliderLabel, UICornerRSF, UICornerRSB, UICornerRSBtn, "Range (Distance)", 240, _G.KillAuraRange, 5, 50, false)
 CreateSlider(DelaySliderFrame, DelaySliderBar, DelaySliderButton, DelaySliderLabel, UICornerDSF, UICornerDSB, UICornerDSBtn, "Attack Delay (Sec)", 280, _G.KillAuraDelay, 0.01, 0.5, true)
 
@@ -415,7 +418,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- ИСПРАВЛЕННЫЙ АВТОПОДБОР ПИСТОЛЕТА (Ссылка из файла auto-pickup fix.docx соблюдена)
+-- ИСПРАВЛЕННЫЙ АВТОПОДБОР ПИСТОЛЕТА (auto-pickup fix.docx)
 task.spawn(function()
     while true do
         task.wait(0.1)
@@ -503,7 +506,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ДИНАМИЧЕСКАЯ КИЛЛАУРА ЧИТАЮЩАЯ ДАННЫЕ ИЗ ПОЛЗУНКОВ
+-- ДИНАМИЧЕСКАЯ КИЛЛАУРА С ОБНОВЛЕНИЕМ ИЗ ПОЛЗУНКОВ
 task.spawn(function()
     while true do
         task.wait(_G.KillAuraDelay)
