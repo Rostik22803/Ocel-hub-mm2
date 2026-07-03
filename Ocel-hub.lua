@@ -18,7 +18,7 @@ local UICornerKillAura = Instance.new("UICorner")
 local SpeedButton = Instance.new("TextButton")
 local UICornerSpeed = Instance.new("UICorner")
 
--- НОВАЯ КНОПКА: Показ FOV
+-- КНОПКА: Показ FOV
 local FOVShowButton = Instance.new("TextButton")
 local UICornerFOVShow = Instance.new("UICorner")
 
@@ -47,7 +47,7 @@ local UICornerSSF = Instance.new("UICorner")
 local UICornerSSB = Instance.new("UICorner")
 local UICornerSSBtn = Instance.new("UICorner")
 
--- НОВЫЙ ПОЛЗУНОК: Радиус FOV для Аима
+-- ПОЛЗУНОК: Радиус FOV для Аима
 local FOVSliderFrame = Instance.new("Frame")
 local FOVSliderBar = Instance.new("Frame")
 local FOVSliderButton = Instance.new("TextButton")
@@ -77,7 +77,7 @@ ScreenGui.Name = "MM2_Ultimate_v6"
 ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
--- ГЛАВНОЕ МЕНЮ (Высота увеличена под новые элементы)
+-- ГЛАВНОЕ МЕНЮ
 local MainFrameHeight = 695
 Frame.Parent = ScreenGui
 Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -155,8 +155,8 @@ _G.SpeedActive = false
 _G.SpeedValue = 40        
 _G.KillAuraRange = 15     
 _G.KillAuraDelay = 0.1    
-_G.AimFOVRadius = 100       -- Радиус FOV по умолчанию
-_G.AimFOVColor = Color3.fromRGB(255, 255, 255) -- Цвет круга по умолчанию
+_G.AimFOVRadius = 100       
+_G.AimFOVColor = Color3.fromRGB(255, 255, 255) 
 
 -- Создание круга Drawing FOV
 local FOVCircle = Drawing.new("Circle")
@@ -250,7 +250,7 @@ CreateSlider(DelaySliderFrame, DelaySliderBar, DelaySliderButton, DelaySliderLab
 CreateSlider(SpeedSliderFrame, SpeedSliderBar, SpeedSliderButton, SpeedSliderLabel, UICornerSSF, UICornerSSB, UICornerSSBtn, "Speed Value", 405, _G.SpeedValue, 16, 150, "Speed")
 CreateSlider(FOVSliderFrame, FOVSliderBar, FOVSliderButton, FOVSliderLabel, UICornerFOVSF, UICornerFOVSB, UICornerFOVSBtn, "Aim FOV Radius", 445, _G.AimFOVRadius, 10, 600, "FOV")
 
--- КНОПКИ ЦВЕТА (Сдвинуты вниз по координате Y)
+-- КНОПКИ ЦВЕТА
 BgColorButton.Name = "BgColorButton"
 BgColorButton.Parent = ContentContainer
 BgColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
@@ -275,7 +275,6 @@ TxtColorButton.TextSize = 13
 UICornerTxtBtn.CornerRadius = UDim.new(0, 6)
 UICornerTxtBtn.Parent = TxtColorButton
 
--- НОВАЯ КНОПКА: Смена цвета FOV кругa
 FOVColorButton.Name = "FOVColorButton"
 FOVColorButton.Parent = ContentContainer
 FOVColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
@@ -447,7 +446,7 @@ end
 task.spawn(function()
     while true do
         task.wait(0.3)
-        if _G.ChamsActive then
+        if _G.ChActive then
             for _, player in ipairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer and player.Character then
                     local role = GetRole(player)
@@ -553,12 +552,14 @@ task.spawn(function()
     end
 end)
 
--- АИМБОТ С УЧЕТОМ FOV РАДИУСА
+-- АИМБОТ С УЧЕТОМ СТАТИЧНОГО ЦЕНТРА ЭКРАНА
 local function GetClosestTarget()
     local myRole = GetRole(LocalPlayer)
     local closestPlayer = nil
     local shortestDistance = math.huge
-    local mousePos = UserInputService:GetMouseLocation()
+    
+    -- Получаем строгий центр экрана
+    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
@@ -576,10 +577,10 @@ local function GetClosestTarget()
                 local screenPos, onScreen = Camera:WorldToViewportPoint(targetHrp.Position)
                 
                 if onScreen then
-                    -- Расчет дистанции от прицела (центра FOV) до игрока на экране
-                    local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                    -- Дистанция на экране считается от геометрического центра экрана
+                    local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
                     
-                    -- Проверка, входит ли игрок в заданный радиус FOV
+                    -- Проверка попадания в FOV
                     if screenDist <= _G.AimFOVRadius then
                         local distance = (LocalPlayer.Character.HumanoidRootPart.Position - targetHrp.Position).Magnitude
                         if distance < shortestDistance then
@@ -607,9 +608,9 @@ end
 
 -- Обновление позиции FOV круга и Аима
 RunService.RenderStepped:Connect(function()
-    -- Центрируем FOV круг по мышке
+    -- Центрируем FOV круг строго посередине экрана
     if _G.FOVShowActive then
-        FOVCircle.Position = UserInputService:GetMouseLocation()
+        FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
         FOVCircle.Radius = _G.AimFOVRadius
         FOVCircle.Visible = true
     else
