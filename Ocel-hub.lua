@@ -26,7 +26,7 @@ local PaletteFrame = Instance.new("Frame")
 local UIGridLayout = Instance.new("UIGridLayout")
 local PaletteCorner = Instance.new("UICorner")
 
-ScreenGui.Name = "MM2_Ultimate_v4"
+ScreenGui.Name = "MM2_Ultimate_v5"
 ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
@@ -34,7 +34,7 @@ ScreenGui.ResetOnSpawn = false
 Frame.Parent = ScreenGui
 Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Frame.Position = UDim2.new(0.05, 0, 0.1, 0)
-Frame.Size = UDim2.new(0, 160, 0, 375) -- Высота скорректирована под 5 кнопок
+Frame.Size = UDim2.new(0, 160, 0, 375)
 Frame.Active = true
 Frame.Draggable = true
 Frame.ClipsDescendants = false
@@ -283,18 +283,16 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- НАСТОЯЩИЙ ANTI-FLING (Физическое подавление импульса)
+-- НАСТОЯЩИЙ ANTI-FLING
 RunService.Heartbeat:Connect(function()
     if _G.AntiFlingActive and LocalPlayer.Character then
         local myHrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         if myHrp then
-            -- Если скорость резко возрастает из-за удара флинг-бота, гасим ее
             if myHrp.Velocity.Magnitude > 75 or myHrp.RotVelocity.Magnitude > 75 then
                 myHrp.Velocity = Vector3.new(0, 0, 0)
                 myHrp.RotVelocity = Vector3.new(0, 0, 0)
             end
         end
-        -- Отключаем симуляцию передачи массы и векторов от чужих хитбоксов
         for _, player in ipairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character then
                 for _, part in ipairs(player.Character:GetChildren()) do
@@ -309,39 +307,48 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- ИСПРАВЛЕННЫЙ И НАДЕЖНЫЙ АВТОПОДБОР ПИСТОЛЕТА
+-- ИСПРАВЛЕННЫЙ АВТОПОДБОР ПИСТОЛЕТА С ФИКСАЦИЕЙ НА ПОЗИЦИИ
 task.spawn(function()
     while true do
         task.wait(0.1)
         if _G.AutoPickupActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local targetGun = nil
+            local gunInstance = nil
             
-            -- Поиск во всех возможных вариациях спавна пистолета в MM2
-            local gunDrop = workspace:FindFirstChild("GunDrop")
-            if gunDrop then
-                targetGun = gunDrop
+            -- Сканируем окружение на наличие пистолета
+            local drop = workspace:FindFirstChild("GunDrop")
+            if drop then
+                gunInstance = drop
             else
-                for _, obj in ipairs(workspace:GetChildren()) do
-                    if (obj.Name == "GunPickup" or obj:IsA("Tool") and (obj.Name:lower():find("gun") or obj.Name:lower():find("revolver"))) and obj:IsA("BasePart") then
-                        targetGun = obj
-                        break
-                    elseif obj:IsA("Model") and (obj.Name:lower():find("gun") or obj.Name:lower():find("pickup")) then
-                        local part = obj:FindFirstChildWhichIsA("BasePart")
-                        if part then targetGun = part break end
+                -- Поиск в картах/папках MM2
+                for _, obj in ipairs(workspace:GetDescendants()) do
+                    if obj.Name == "GunDrop" or (obj:IsA("TouchTransmitter") and obj.Parent and obj.Parent.Name == "LeftHand") then
+                        if obj:IsA("BasePart") then
+                            gunInstance = obj
+                            break
+                        elseif obj.Parent:IsA("BasePart") then
+                            gunInstance = obj.Parent
+                            break
+                        end
                     end
                 end
             end
             
-            if targetGun then
+            -- Если пистолет найден
+            if gunInstance and gunInstance:IsA("BasePart") then
                 local hrp = LocalPlayer.Character.HumanoidRootPart
                 local oldCFrame = hrp.CFrame
-                -- Телепорт строго на хитбокс пистолета
-                hrp.CFrame = targetGun.CFrame
-                task.wait(0.15)
-                -- Возврат обратно, если пистолет подобрался успешно
-                if not targetGun.Parent or targetGun:FindFirstChild("Player") then
-                    hrp.CFrame = oldCFrame
+                
+                -- Удерживаем персонажа на пистолете, чтобы сервер успел зарегистрировать хитбокс
+                local checkTime = 0
+                while gunInstance and gunInstance.Parent and checkTime < 0.3 do
+                    hrp.CFrame = gunInstance.CFrame
+                    RunService.Heartbeat:Wait()
+                    checkTime = checkTime + game:GetService("RunService").Heartbeat:Wait()
                 end
+                
+                -- Возврат обратно на позицию
+                hrp.CFrame = oldCFrame
+                task.wait(0.5) -- Кулдаун, чтобы не спамило телепортами
             end
         end
     end
@@ -396,7 +403,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ОБРАБОТКА НАЖАТИЙ КНОПОК И СМЕНА ТЕКСТА
+-- ОБРАБОТКА НАЖАТИЙ КНОПОК
 ChamsButton.MouseButton1Click:Connect(function()
     _G.ChamsActive = not _G.ChamsActive
     ChamsButton.Text = _G.ChamsActive and "CHAMS: ON" or "CHAMS: OFF"
