@@ -18,6 +18,10 @@ local UICornerKillAura = Instance.new("UICorner")
 local SpeedButton = Instance.new("TextButton")
 local UICornerSpeed = Instance.new("UICorner")
 
+-- НОВАЯ КНОПКА: Показ FOV
+local FOVShowButton = Instance.new("TextButton")
+local UICornerFOVShow = Instance.new("UICorner")
+
 -- ЭЛЕМЕНТЫ ПОЛЗУНКОВ (SLIDERS)
 local RangeSliderFrame = Instance.new("Frame")
 local RangeSliderBar = Instance.new("Frame")
@@ -35,7 +39,6 @@ local UICornerDSF = Instance.new("UICorner")
 local UICornerDSB = Instance.new("UICorner")
 local UICornerDSBtn = Instance.new("UICorner")
 
--- Новый ползунок для Спидхака
 local SpeedSliderFrame = Instance.new("Frame")
 local SpeedSliderBar = Instance.new("Frame")
 local SpeedSliderButton = Instance.new("TextButton")
@@ -43,6 +46,15 @@ local SpeedSliderLabel = Instance.new("TextLabel")
 local UICornerSSF = Instance.new("UICorner")
 local UICornerSSB = Instance.new("UICorner")
 local UICornerSSBtn = Instance.new("UICorner")
+
+-- НОВЫЙ ПОЛЗУНОК: Радиус FOV для Аима
+local FOVSliderFrame = Instance.new("Frame")
+local FOVSliderBar = Instance.new("Frame")
+local FOVSliderButton = Instance.new("TextButton")
+local FOVSliderLabel = Instance.new("TextLabel")
+local UICornerFOVSF = Instance.new("UICorner")
+local UICornerFOVSB = Instance.new("UICorner")
+local UICornerFOVSBtn = Instance.new("UICorner")
 
 -- Элементы управления меню
 local HeaderLabel = Instance.new("TextLabel")
@@ -53,18 +65,20 @@ local BgColorButton = Instance.new("TextButton")
 local UICornerBgBtn = Instance.new("UICorner")
 local TxtColorButton = Instance.new("TextButton")
 local UICornerTxtBtn = Instance.new("UICorner")
+local FOVColorButton = Instance.new("TextButton")
+local UICornerFOVColorBtn = Instance.new("UICorner")
 
 -- Фрейм палитры
 local PaletteFrame = Instance.new("Frame")
 local UIGridLayout = Instance.new("UIGridLayout")
 local PaletteCorner = Instance.new("UICorner")
 
-ScreenGui.Name = "MM2_Ultimate_v5"
+ScreenGui.Name = "MM2_Ultimate_v6"
 ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
--- ГЛАВНОЕ МЕНЮ (Высота увеличена для размещения нового ползунка)
-local MainFrameHeight = 585
+-- ГЛАВНОЕ МЕНЮ (Высота увеличена под новые элементы)
+local MainFrameHeight = 695
 Frame.Parent = ScreenGui
 Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Frame.Position = UDim2.new(0.05, 0, 0.1, 0)
@@ -121,24 +135,36 @@ end
 
 ApplyButtonStyles(ChamsButton, UICornerChams, "CHAMS", 0)
 ApplyButtonStyles(AimButton, UICornerAim, "AIM", 40)
-ApplyButtonStyles(NoclipButton, UICornerNoclip, "NOCLIP", 80)
-ApplyButtonStyles(AntiFlingButton, UICornerFling, "ANTI-FLING", 120)
-ApplyButtonStyles(PickupButton, UICornerPickup, "AUTOPICKUP", 160)
-ApplyButtonStyles(KillAuraButton, UICornerKillAura, "KILL AURA", 200)
-ApplyButtonStyles(SpeedButton, UICornerSpeed, "SPEEDHACK", 240)
+ApplyButtonStyles(FOVShowButton, UICornerFOVShow, "SHOW FOV", 80)
+ApplyButtonStyles(NoclipButton, UICornerNoclip, "NOCLIP", 120)
+ApplyButtonStyles(AntiFlingButton, UICornerFling, "ANTI-FLING", 160)
+ApplyButtonStyles(PickupButton, UICornerPickup, "AUTOPICKUP", 200)
+ApplyButtonStyles(KillAuraButton, UICornerKillAura, "KILL AURA", 240)
+ApplyButtonStyles(SpeedButton, UICornerSpeed, "SPEEDHACK", 280)
 
 -- НАСТРОЙКИ ФУНКЦИЙ ГЕЙМПЛЕЯ И ДЕФОЛТЫ
 _G.ChamsActive = false
 _G.SilentAimActive = false
+_G.FOVShowActive = false
 _G.NoclipActive = false
 _G.AntiFlingActive = false
 _G.AutoPickupActive = false
 _G.KillAuraActive = false
 _G.SpeedActive = false
 
-_G.SpeedValue = 40        -- Скорость по умолчанию
+_G.SpeedValue = 40        
 _G.KillAuraRange = 15     
 _G.KillAuraDelay = 0.1    
+_G.AimFOVRadius = 100       -- Радиус FOV по умолчанию
+_G.AimFOVColor = Color3.fromRGB(255, 255, 255) -- Цвет круга по умолчанию
+
+-- Создание круга Drawing FOV
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Thickness = 1.5
+FOVCircle.Visible = false
+FOVCircle.Color = _G.AimFOVColor
+FOVCircle.Filled = false
+FOVCircle.NumSides = 64
 
 -- ФУНКЦИЯ СОЗДАНИЯ И СТАБИЛИЗАЦИИ ПОЛЗУНКОВ
 local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, btnCorner, text, yPos, currentVal, minVal, maxVal, sliderType)
@@ -190,6 +216,10 @@ local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, 
         elseif sliderType == "Speed" then
             val = math.round(val)
             _G.SpeedValue = val
+        elseif sliderType == "FOV" then
+            val = math.round(val)
+            _G.AimFOVRadius = val
+            FOVCircle.Radius = val
         else
             val = math.round(val)
             _G.KillAuraRange = val
@@ -214,16 +244,17 @@ local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, 
     end)
 end
 
--- Инициализация ползунков (Добавлен ползунок для Speedhack)
-CreateSlider(RangeSliderFrame, RangeSliderBar, RangeSliderButton, RangeSliderLabel, UICornerRSF, UICornerRSB, UICornerRSBtn, "Range (Distance)", 285, _G.KillAuraRange, 5, 50, "Integer")
-CreateSlider(DelaySliderFrame, DelaySliderBar, DelaySliderButton, DelaySliderLabel, UICornerDSF, UICornerDSB, UICornerDSBtn, "Attack Delay (Sec)", 325, _G.KillAuraDelay, 0.01, 0.5, "Decimal")
-CreateSlider(SpeedSliderFrame, SpeedSliderBar, SpeedSliderButton, SpeedSliderLabel, UICornerSSF, UICornerSSB, UICornerSSBtn, "Speed Value", 365, _G.SpeedValue, 16, 150, "Speed")
+-- Инициализация ползунков
+CreateSlider(RangeSliderFrame, RangeSliderBar, RangeSliderButton, RangeSliderLabel, UICornerRSF, UICornerRSB, UICornerRSBtn, "Range (Distance)", 325, _G.KillAuraRange, 5, 50, "Integer")
+CreateSlider(DelaySliderFrame, DelaySliderBar, DelaySliderButton, DelaySliderLabel, UICornerDSF, UICornerDSB, UICornerDSBtn, "Attack Delay (Sec)", 365, _G.KillAuraDelay, 0.01, 0.5, "Decimal")
+CreateSlider(SpeedSliderFrame, SpeedSliderBar, SpeedSliderButton, SpeedSliderLabel, UICornerSSF, UICornerSSB, UICornerSSBtn, "Speed Value", 405, _G.SpeedValue, 16, 150, "Speed")
+CreateSlider(FOVSliderFrame, FOVSliderBar, FOVSliderButton, FOVSliderLabel, UICornerFOVSF, UICornerFOVSB, UICornerFOVSBtn, "Aim FOV Radius", 445, _G.AimFOVRadius, 10, 600, "FOV")
 
 -- КНОПКИ ЦВЕТА (Сдвинуты вниз по координате Y)
 BgColorButton.Name = "BgColorButton"
 BgColorButton.Parent = ContentContainer
 BgColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-BgColorButton.Position = UDim2.new(0, 10, 0, 415)
+BgColorButton.Position = UDim2.new(0, 10, 0, 495)
 BgColorButton.Size = UDim2.new(0, 140, 0, 30)
 BgColorButton.Font = Enum.Font.SourceSansBold
 BgColorButton.Text = "BG COLOR"
@@ -235,7 +266,7 @@ UICornerBgBtn.Parent = BgColorButton
 TxtColorButton.Name = "TxtColorButton"
 TxtColorButton.Parent = ContentContainer
 TxtColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-TxtColorButton.Position = UDim2.new(0, 10, 0, 450)
+TxtColorButton.Position = UDim2.new(0, 10, 0, 530)
 TxtColorButton.Size = UDim2.new(0, 140, 0, 30)
 TxtColorButton.Font = Enum.Font.SourceSansBold
 TxtColorButton.Text = "TXT COLOR"
@@ -243,6 +274,19 @@ TxtColorButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 TxtColorButton.TextSize = 13
 UICornerTxtBtn.CornerRadius = UDim.new(0, 6)
 UICornerTxtBtn.Parent = TxtColorButton
+
+-- НОВАЯ КНОПКА: Смена цвета FOV кругa
+FOVColorButton.Name = "FOVColorButton"
+FOVColorButton.Parent = ContentContainer
+FOVColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+FOVColorButton.Position = UDim2.new(0, 10, 0, 565)
+FOVColorButton.Size = UDim2.new(0, 140, 0, 30)
+FOVColorButton.Font = Enum.Font.SourceSansBold
+FOVColorButton.Text = "FOV COLOR"
+FOVColorButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FOVColorButton.TextSize = 13
+UICornerFOVColorBtn.CornerRadius = UDim.new(0, 6)
+UICornerFOVColorBtn.Parent = FOVColorButton
 
 -- ПАЛИТРА
 PaletteFrame.Name = "PaletteFrame"
@@ -283,6 +327,7 @@ for _, color in ipairs(PopularColors) do
             CollapseButton.TextColor3 = color
             ChamsButton.TextColor3 = color
             AimButton.TextColor3 = color
+            FOVShowButton.TextColor3 = color
             NoclipButton.TextColor3 = color
             AntiFlingButton.TextColor3 = color
             PickupButton.TextColor3 = color
@@ -291,8 +336,13 @@ for _, color in ipairs(PopularColors) do
             RangeSliderLabel.TextColor3 = color
             DelaySliderLabel.TextColor3 = color
             SpeedSliderLabel.TextColor3 = color
+            FOVSliderLabel.TextColor3 = color
             BgColorButton.TextColor3 = color
             TxtColorButton.TextColor3 = color
+            FOVColorButton.TextColor3 = color
+        elseif currentTargetMode == "FOV" then
+            _G.AimFOVColor = color
+            FOVCircle.Color = color
         end
     end)
 end
@@ -316,6 +366,17 @@ TxtColorButton.MouseButton1Click:Connect(function()
         PaletteFrame.Visible = true
         currentTargetMode = "TXT"
         PaletteFrame.Position = UDim2.new(1, 10, 0, 290)
+    end
+end)
+
+FOVColorButton.MouseButton1Click:Connect(function()
+    if PaletteFrame.Visible and currentTargetMode == "FOV" then
+        PaletteFrame.Visible = false
+        currentTargetMode = "None"
+    else
+        PaletteFrame.Visible = true
+        currentTargetMode = "FOV"
+        PaletteFrame.Position = UDim2.new(1, 10, 0, 320)
     end
 end)
 
@@ -446,7 +507,6 @@ RunService.Heartbeat:Connect(function()
     else
         if LocalPlayer.Character then
             local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            -- Возвращаем базовую скорость 16, если хак отключен
             if humanoid and humanoid.WalkSpeed ~= 16 then
                 humanoid.WalkSpeed = 16
             end
@@ -493,11 +553,13 @@ task.spawn(function()
     end
 end)
 
--- АИМБОТ И ЦЕЛИ
+-- АИМБОТ С УЧЕТОМ FOV РАДИУСА
 local function GetClosestTarget()
     local myRole = GetRole(LocalPlayer)
     local closestPlayer = nil
     local shortestDistance = math.huge
+    local mousePos = UserInputService:GetMouseLocation()
+
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local targetRole = GetRole(player)
@@ -507,12 +569,24 @@ local function GetClosestTarget()
             elseif (myRole == "Sheriff" or myRole == "Innocent") and targetRole == "Murderer" then
                 validTarget = true
             end
+            
             local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
             if validTarget and humanoid and humanoid.Health > 0 then
-                local distance = (LocalPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-                if distance < shortestDistance then
-                    shortestDistance = distance
-                    closestPlayer = player
+                local targetHrp = player.Character.HumanoidRootPart
+                local screenPos, onScreen = Camera:WorldToViewportPoint(targetHrp.Position)
+                
+                if onScreen then
+                    -- Расчет дистанции от прицела (центра FOV) до игрока на экране
+                    local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                    
+                    -- Проверка, входит ли игрок в заданный радиус FOV
+                    if screenDist <= _G.AimFOVRadius then
+                        local distance = (LocalPlayer.Character.HumanoidRootPart.Position - targetHrp.Position).Magnitude
+                        if distance < shortestDistance then
+                            shortestDistance = distance
+                            closestPlayer = player
+                        end
+                    end
                 end
             end
         end
@@ -531,7 +605,17 @@ local function IsHoldingWeapon()
     return false
 end
 
+-- Обновление позиции FOV круга и Аима
 RunService.RenderStepped:Connect(function()
+    -- Центрируем FOV круг по мышке
+    if _G.FOVShowActive then
+        FOVCircle.Position = UserInputService:GetMouseLocation()
+        FOVCircle.Radius = _G.AimFOVRadius
+        FOVCircle.Visible = true
+    else
+        FOVCircle.Visible = false
+    end
+
     if _G.SilentAimActive and IsHoldingWeapon() then
         if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
             local target = GetClosestTarget()
@@ -546,31 +630,21 @@ end)
 task.spawn(function()
     while true do
         task.wait(_G.KillAuraDelay)
-        
         if _G.KillAuraActive and GetRole(LocalPlayer) == "Murderer" and LocalPlayer.Character then
             local knife = LocalPlayer.Character:FindFirstChild("Knife") or LocalPlayer.Backpack:FindFirstChild("Knife")
-            
             if knife then
-                if knife.Parent == LocalPlayer.Backpack then
-                    knife.Parent = LocalPlayer.Character
-                end
-                
+                if knife.Parent == LocalPlayer.Backpack then knife.Parent = LocalPlayer.Character end
                 local handle = knife:FindFirstChild("Handle")
                 local myHrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                
                 if myHrp and handle then
                     for _, player in ipairs(Players:GetPlayers()) do
                         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                             local targetHrp = player.Character.HumanoidRootPart
                             local distance = (myHrp.Position - targetHrp.Position).Magnitude
                             local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-                            
                             if distance <= _G.KillAuraRange and humanoid and humanoid.Health > 0 then
                                 local stabRemote = knife:FindFirstChild("Stab") or knife:FindFirstChild("StabServer")
-                                if stabRemote and stabRemote:IsA("RemoteEvent") then
-                                    stabRemote:FireServer()
-                                end
-                                
+                                if stabRemote and stabRemote:IsA("RemoteEvent") then stabRemote:FireServer() end
                                 if firetouchinterest then
                                     firetouchinterest(handle, targetHrp, 0)
                                     firetouchinterest(handle, targetHrp, 1)
@@ -598,6 +672,12 @@ AimButton.MouseButton1Click:Connect(function()
     _G.SilentAimActive = not _G.SilentAimActive
     AimButton.Text = _G.SilentAimActive and "AIM: ON" or "AIM: OFF"
     AimButton.BackgroundColor3 = _G.SilentAimActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
+end)
+
+FOVShowButton.MouseButton1Click:Connect(function()
+    _G.FOVShowActive = not _G.FOVShowActive
+    FOVShowButton.Text = _G.FOVShowActive and "SHOW FOV: ON" or "SHOW FOV: OFF"
+    FOVShowButton.BackgroundColor3 = _G.FOVShowActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
 end)
 
 NoclipButton.MouseButton1Click:Connect(function()
