@@ -1,4 +1,3 @@
-
 local ScreenGui = Instance.new("ScreenGui")
 local Frame = Instance.new("Frame")
 local UICornerFrame = Instance.new("UICorner")
@@ -55,7 +54,7 @@ ScreenGui.Name = "MM2_Ultimate_v5"
 ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
--- ГЛАВНОЕ МЕНЮ (Высота увеличена для новой кнопки)
+-- ГЛАВНОЕ МЕНЮ
 local MainFrameHeight = 545
 Frame.Parent = ScreenGui
 Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -117,7 +116,7 @@ ApplyButtonStyles(NoclipButton, UICornerNoclip, "NOCLIP", 80)
 ApplyButtonStyles(AntiFlingButton, UICornerFling, "ANTI-FLING", 120)
 ApplyButtonStyles(PickupButton, UICornerPickup, "AUTOPICKUP", 160)
 ApplyButtonStyles(KillAuraButton, UICornerKillAura, "KILL AURA", 200)
-ApplyButtonStyles(SpeedButton, UICornerSpeed, "SPEEDHACK", 240) -- Добавлена кнопка спидхака
+ApplyButtonStyles(SpeedButton, UICornerSpeed, "SPEEDHACK", 240)
 
 -- НАСТРОЙКИ ФУНКЦИЙ ГЕЙМПЛЕЯ И ДЕФОЛТЫ
 _G.ChamsActive = false
@@ -127,7 +126,7 @@ _G.AntiFlingActive = false
 _G.AutoPickupActive = false
 _G.KillAuraActive = false
 _G.SpeedActive = false
-_G.SpeedValue = 40 -- Скорость бега при спидхаке
+_G.SpeedValue = 40 -- Настройка на основе конфигурации из спидхак.docx
 _G.KillAuraRange = 15     
 _G.KillAuraDelay = 0.1    
 
@@ -202,7 +201,7 @@ local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, 
     end)
 end
 
--- Инициализация ползунков (сдвинуты вниз из-за кнопки Speedhack)
+-- Инициализация ползунков
 CreateSlider(RangeSliderFrame, RangeSliderBar, RangeSliderButton, RangeSliderLabel, UICornerRSF, UICornerRSB, UICornerRSBtn, "Range (Distance)", 285, _G.KillAuraRange, 5, 50, false)
 CreateSlider(DelaySliderFrame, DelaySliderBar, DelaySliderButton, DelaySliderLabel, UICornerDSF, UICornerDSB, UICornerDSBtn, "Attack Delay (Sec)", 325, _G.KillAuraDelay, 0.01, 0.5, true)
 
@@ -396,7 +395,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- НАСТОЯЩИЙ ANTI-FLING
+-- ANTI-FLING
 RunService.Heartbeat:Connect(function()
     if _G.AntiFlingActive and LocalPlayer.Character then
         local myHrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -420,7 +419,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- ПОТОК SPEEDHACK
+-- ПОТОК SPEEDHACK (Синхронизировано на основе файла спидхак.docx)
 RunService.Heartbeat:Connect(function()
     if _G.SpeedActive and LocalPlayer.Character then
         local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
@@ -431,7 +430,7 @@ RunService.Heartbeat:Connect(function()
         if LocalPlayer.Character then
             local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
             if humanoid and humanoid.WalkSpeed == _G.SpeedValue then
-                humanoid.WalkSpeed = 16 -- Стандартная скорость Roblox
+                humanoid.WalkSpeed = 16
             end
         end
     end
@@ -525,7 +524,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- РАБОЧАЯ КИЛЛАУРА ЧЕРЕЗ ИВЕНТ ММ2
+-- ИСПРАВЛЕННЫЙ И РАБОЧИЙ ПОТОК КИЛЛАУРЫ
 task.spawn(function()
     while true do
         task.wait(_G.KillAuraDelay)
@@ -538,8 +537,10 @@ task.spawn(function()
                     knife.Parent = LocalPlayer.Character
                 end
                 
+                local handle = knife:FindFirstChild("Handle")
                 local myHrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                if myHrp then
+                
+                if myHrp and handle then
                     for _, player in ipairs(Players:GetPlayers()) do
                         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                             local targetHrp = player.Character.HumanoidRootPart
@@ -547,12 +548,17 @@ task.spawn(function()
                             local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
                             
                             if distance <= _G.KillAuraRange and humanoid and humanoid.Health > 0 then
-                                -- Вызов родного серверного репликатора урона MM2 для 100% срабатывания
-                                if knife:FindFirstChild("Stab") then
-                                    knife.Stab:FireServer(global_range_check and 1 or 0)
+                                -- Безопасный вызов анимации взмаха (проверка на существование ивента)
+                                local stabRemote = knife:FindFirstChild("Stab") or knife:FindFirstChild("StabServer")
+                                if stabRemote and stabRemote:IsA("RemoteEvent") then
+                                    stabRemote:FireServer()
                                 end
-                                firetouchinsert(knife:FindFirstChild("Handle"), targetHrp, 1)
-                                firetouchinsert(knife:FindFirstChild("Handle"), targetHrp, 0)
+                                
+                                -- Симуляция физического касания хитбокса (Исправлено название функции)
+                                if firetouchinterest then
+                                    firetouchinterest(handle, targetHrp, 0)
+                                    firetouchinterest(handle, targetHrp, 1)
+                                end
                             end
                         end
                     end
