@@ -60,7 +60,7 @@ CollapseButton.Text = "-"
 CollapseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 CollapseButton.TextSize = 20
 
--- ОСТАЛЬНЫЕ КНОПКИ (Упакованы в контейнер для легкого скрытия)
+-- ОСТАЛЬНЫЕ КНОПКИ (Контейнер для корректного сворачивания)
 local ContentContainer = Instance.new("Frame")
 ContentContainer.Parent = Frame
 ContentContainer.BackgroundTransparency = 1
@@ -121,7 +121,7 @@ ColorPaletteButton.TextSize = 18
 UICornerPalette.CornerRadius = UDim.new(0, 6)
 UICornerPalette.Parent = ColorPaletteButton
 
--- СЕТКА ПАЛИТРЫ ЦВЕТОВ (12 Самых популярных оттенков)
+-- СЕТКА ПАЛИТРЫ ЦВЕТОВ (12 оттенков)
 PaletteFrame.Name = "PaletteFrame"
 PaletteFrame.Parent = ContentContainer
 PaletteFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
@@ -157,7 +157,7 @@ TimerWindow.Name = "MM2_TimerWindow"
 TimerWindow.Parent = ScreenGui
 TimerWindow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 TimerWindow.Position = UDim2.new(0.05, 0, 0.35, 0)
-TimerWindow.Size = UDim2.new(0, 120, 0, 45)
+TimerWindow.Size = UDim2.new(0, 140, 0, 45)
 TimerWindow.Active = true
 TimerWindow.Draggable = true
 TimerWindow.Visible = false
@@ -171,9 +171,9 @@ TimerTextLabel.Size = UDim2.new(1, 0, 1, 0)
 TimerTextLabel.Font = Enum.Font.SourceSansBold
 TimerTextLabel.Text = "00:00"
 TimerTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TimerTextLabel.TextSize = 22
+TimerTextLabel.TextSize = 18
 
--- Логика применения цветов из палитры
+-- Заполнение палитры кнопками
 for _, color in ipairs(PopularColors) do
     local ColorBtn = Instance.new("TextButton")
     ColorBtn.Text = ""
@@ -208,7 +208,7 @@ CollapseButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- РЕАЛЬНЫЙ ТАЙМЕР РАУНДА MM2
+-- РЕАЛЬНЫЙ ТАЙМЕР РАУНДА И ЛОББИ MM2
 local TimerActive = false
 local timerCoroutine = nil
 
@@ -221,17 +221,36 @@ end
 
 local function GetMM2Time()
     local repl = game:GetService("ReplicatedStorage")
-    -- Проверка стандартных путей хранения таймера в оригинальном Murder Mystery 2
-    local roundTimer = repl:FindFirstChild("TimerToClose") or repl:FindFirstChild("RoundTimer")
-    if not roundTimer and repl:FindFirstChild("Remotes") then
-        local gameplay = repl.Remotes:FindFirstChild("Gameplay")
-        if gameplay then roundTimer = gameplay:FindFirstChild("RoundTimer") end
+    
+    local timerToClose = repl:FindFirstChild("TimerToClose")
+    local roundTimer = repl:FindFirstChild("RoundTimer")
+    local lobbyTimer = repl:FindFirstChild("LobbyTimer")
+    
+    if timerToClose and timerToClose.Value and tonumber(timerToClose.Value) > 0 then
+        return tonumber(timerToClose.Value), "Game"
+    end
+    if roundTimer and roundTimer.Value and tonumber(roundTimer.Value) > 0 then
+        return tonumber(roundTimer.Value), "Game"
+    end
+    if lobbyTimer and lobbyTimer.Value and tonumber(lobbyTimer.Value) > 0 then
+        return tonumber(lobbyTimer.Value), "Lobby"
+    end
+
+    local remotes = repl:FindFirstChild("Remotes")
+    local gameplay = remotes and remotes:FindFirstChild("Gameplay")
+    if gameplay then
+        local remoteRoundTimer = gameplay:FindFirstChild("RoundTimer")
+        local remoteLobbyTimer = gameplay:FindFirstChild("LobbyTimer") or gameplay:FindFirstChild("Timer")
+        
+        if remoteRoundTimer and remoteRoundTimer.Value and tonumber(remoteRoundTimer.Value) > 0 then
+            return tonumber(remoteRoundTimer.Value), "Game"
+        end
+        if remoteLobbyTimer and remoteLobbyTimer.Value and tonumber(remoteLobbyTimer.Value) > 0 then
+            return tonumber(remoteLobbyTimer.Value), "Lobby"
+        end
     end
     
-    if roundTimer and (roundTimer:IsA("IntValue") or roundTimer:IsA("NumberValue") or roundTimer:IsA("StringValue")) then
-        return tonumber(roundTimer.Value)
-    end
-    return nil
+    return nil, nil
 end
 
 TimerButton.MouseButton1Click:Connect(function()
@@ -242,14 +261,26 @@ TimerButton.MouseButton1Click:Connect(function()
         TimerWindow.Visible = true
         
         timerCoroutine = task.spawn(function()
+            local lastValidTime = 0
             while TimerActive do
-                local serverTime = GetMM2Time()
+                local serverTime, state = GetMM2Time()
+                
                 if serverTime then
-                    TimerTextLabel.Text = FormatTime(serverTime)
+                    lastValidTime = serverTime
+                    if state == "Lobby" then
+                        TimerTextLabel.Text = "Lobby: " .. FormatTime(serverTime)
+                    else
+                        TimerTextLabel.Text = "Round: " .. FormatTime(serverTime)
+                    end
                 else
-                    TimerTextLabel.Text = "Lobby / --:--"
+                    if lastValidTime > 0 then
+                        lastValidTime = lastValidTime - 1
+                        TimerTextLabel.Text = "Intermission: " .. FormatTime(lastValidTime)
+                    else
+                        TimerTextLabel.Text = "Waiting..."
+                    end
                 end
-                task.wait(0.5) -- Оптимальное обновление полсекунды
+                task.wait(1)
             end
         end)
     else
@@ -261,7 +292,7 @@ TimerButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- [Оригинальная логика Чамсов и Аимбота сохранена полностью]
+-- ОРИГИНАЛЬНАЯ ЛОГИКА ИЗ "Mm2 aim.docx"
 _G.ChamsActive = false
 _G.SilentAimActive = false
 local Colors = {
