@@ -5,17 +5,20 @@ local ChamsButton = Instance.new("TextButton")
 local UICornerChams = Instance.new("UICorner")
 local AimButton = Instance.new("TextButton")
 local UICornerAim = Instance.new("UICorner")
+-- Новые кнопки функций
+local AntiFlingButton = Instance.new("TextButton")
+local UICornerFling = Instance.new("UICorner")
+local PickupButton = Instance.new("TextButton")
+local UICornerPickup = Instance.new("UICorner")
 
 -- Элементы управления меню
 local HeaderLabel = Instance.new("TextLabel")
 local CollapseButton = Instance.new("TextButton")
-
--- Новые кнопки кастомизации цвета
+-- Кнопки кастомизации цвета
 local BgColorButton = Instance.new("TextButton")
 local UICornerBgBtn = Instance.new("UICorner")
 local TxtColorButton = Instance.new("TextButton")
 local UICornerTxtBtn = Instance.new("UICorner")
-
 -- Фрейм палитры (общий для выбора)
 local PaletteFrame = Instance.new("Frame")
 local UIGridLayout = Instance.new("UIGridLayout")
@@ -29,11 +32,10 @@ ScreenGui.ResetOnSpawn = false
 Frame.Parent = ScreenGui
 Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Frame.Position = UDim2.new(0.05, 0, 0.1, 0)
-Frame.Size = UDim2.new(0, 160, 0, 240) -- Размер скорректирован под новые кнопки
+Frame.Size = UDim2.new(0, 160, 0, 330) -- Размер увеличен для новых кнопок
 Frame.Active = true
 Frame.Draggable = true
 Frame.ClipsDescendants = false
-
 UICornerFrame.CornerRadius = UDim.new(0, 8)
 UICornerFrame.Parent = Frame
 
@@ -60,7 +62,7 @@ CollapseButton.Text = "-"
 CollapseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 CollapseButton.TextSize = 20
 
--- КОНТЕЙНЕР ДЛЯ КНОПОК (Для красивого сворачивания)
+-- КОНТЕЙНЕР ДЛЯ КНОПОК
 local ContentContainer = Instance.new("Frame")
 ContentContainer.Parent = Frame
 ContentContainer.BackgroundTransparency = 1
@@ -84,7 +86,7 @@ UICornerChams.Parent = ChamsButton
 AimButton.Name = "AimButton"
 AimButton.Parent = ContentContainer
 AimButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-AimButton.Position = UDim2.new(0, 10, 0, 50)
+AimButton.Position = UDim2.new(0, 10, 0, 45)
 AimButton.Size = UDim2.new(0, 140, 0, 40)
 AimButton.Font = Enum.Font.SourceSansBold
 AimButton.Text = "AIM: OFF"
@@ -93,11 +95,37 @@ AimButton.TextSize = 16
 UICornerAim.CornerRadius = UDim.new(0, 6)
 UICornerAim.Parent = AimButton
 
+-- Кнопка Анти-Флинг
+AntiFlingButton.Name = "AntiFlingButton"
+AntiFlingButton.Parent = ContentContainer
+AntiFlingButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+AntiFlingButton.Position = UDim2.new(0, 10, 0, 90)
+AntiFlingButton.Size = UDim2.new(0, 140, 0, 40)
+AntiFlingButton.Font = Enum.Font.SourceSansBold
+AntiFlingButton.Text = "ANTI-FLING: OFF"
+AntiFlingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AntiFlingButton.TextSize = 16
+UICornerFling.CornerRadius = UDim.new(0, 6)
+UICornerFling.Parent = AntiFlingButton
+
+-- Кнопка Авто-Подбора
+PickupButton.Name = "PickupButton"
+PickupButton.Parent = ContentContainer
+PickupButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+PickupButton.Position = UDim2.new(0, 10, 0, 135)
+PickupButton.Size = UDim2.new(0, 140, 0, 40)
+PickupButton.Font = Enum.Font.SourceSansBold
+PickupButton.Text = "AUTOPICKUP: OFF"
+PickupButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+PickupButton.TextSize = 16
+UICornerPickup.CornerRadius = UDim.new(0, 6)
+UICornerPickup.Parent = PickupButton
+
 -- КНОПКА ИЗМЕНЕНИЯ ЦВЕТА ФОНА
 BgColorButton.Name = "BgColorButton"
 BgColorButton.Parent = ContentContainer
 BgColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-BgColorButton.Position = UDim2.new(0, 10, 0, 110)
+BgColorButton.Position = UDim2.new(0, 10, 0, 185)
 BgColorButton.Size = UDim2.new(0, 140, 0, 35)
 BgColorButton.Font = Enum.Font.SourceSansBold
 BgColorButton.Text = "BG COLOR"
@@ -110,7 +138,7 @@ UICornerBgBtn.Parent = BgColorButton
 TxtColorButton.Name = "TxtColorButton"
 TxtColorButton.Parent = ContentContainer
 TxtColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-TxtColorButton.Position = UDim2.new(0, 10, 0, 155)
+TxtColorButton.Position = UDim2.new(0, 10, 0, 225)
 TxtColorButton.Size = UDim2.new(0, 140, 0, 35)
 TxtColorButton.Font = Enum.Font.SourceSansBold
 TxtColorButton.Text = "TXT COLOR"
@@ -119,7 +147,7 @@ TxtColorButton.TextSize = 14
 UICornerTxtBtn.CornerRadius = UDim.new(0, 6)
 UICornerTxtBtn.Parent = TxtColorButton
 
--- СЕТКА С ПАЛИТРОЙ ЦВЕТОВ (12 Популярных цветов)
+-- СЕТКА С ПАЛИТРОЙ ЦВЕТОВ
 PaletteFrame.Name = "PaletteFrame"
 PaletteFrame.Parent = Frame
 PaletteFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
@@ -128,7 +156,6 @@ PaletteFrame.Size = UDim2.new(0, 110, 0, 140)
 PaletteFrame.Visible = false
 PaletteCorner.CornerRadius = UDim.new(0, 6)
 PaletteCorner.Parent = PaletteFrame
-
 UIGridLayout.Parent = PaletteFrame
 UIGridLayout.CellPadding = UDim2.new(0, 5, 0, 5)
 UIGridLayout.CellSize = UDim2.new(0, 30, 0, 30)
@@ -136,24 +163,13 @@ UIGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 UIGridLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 
 local PopularColors = {
-    Color3.fromRGB(255, 255, 255), -- Белый
-    Color3.fromRGB(30, 30, 30),     -- Темно-серый
-    Color3.fromRGB(255, 0, 0),     -- Красный
-    Color3.fromRGB(0, 255, 0),     -- Зеленый
-    Color3.fromRGB(0, 120, 255),   -- Синий
-    Color3.fromRGB(255, 255, 0),   -- Желтый
-    Color3.fromRGB(0, 255, 255),   -- Циан
-    Color3.fromRGB(255, 0, 255),   -- Маджента
-    Color3.fromRGB(255, 165, 0),   -- Оранжевый
-    Color3.fromRGB(128, 0, 128),   -- Фиолетовый
-    Color3.fromRGB(255, 192, 203), -- Розовый
-    Color3.fromRGB(170, 255, 0)    -- Лайм
+    Color3.fromRGB(255, 255, 255), Color3.fromRGB(30, 30, 30), Color3.fromRGB(255, 0, 0),
+    Color3.fromRGB(0, 255, 0), Color3.fromRGB(0, 120, 255), Color3.fromRGB(255, 255, 0),
+    Color3.fromRGB(0, 255, 255), Color3.fromRGB(255, 0, 255), Color3.fromRGB(255, 165, 0),
+    Color3.fromRGB(128, 0, 128), Color3.fromRGB(255, 192, 203), Color3.fromRGB(170, 255, 0)
 }
 
--- ЛОГИКА ВЫБОРА ЦВЕТА
-local currentTargetMode = "None" -- "BG" или "TXT"
-local colorButtons = {}
-
+local currentTargetMode = "None"
 for _, color in ipairs(PopularColors) do
     local ColorBtn = Instance.new("TextButton")
     ColorBtn.Text = ""
@@ -169,14 +185,14 @@ for _, color in ipairs(PopularColors) do
             CollapseButton.TextColor3 = color
             ChamsButton.TextColor3 = color
             AimButton.TextColor3 = color
+            AntiFlingButton.TextColor3 = color
+            PickupButton.TextColor3 = color
             BgColorButton.TextColor3 = color
             TxtColorButton.TextColor3 = color
         end
     end)
-    table.insert(colorButtons, ColorBtn)
 end
 
--- Открытие палитры для фона
 BgColorButton.MouseButton1Click:Connect(function()
     if PaletteFrame.Visible and currentTargetMode == "BG" then
         PaletteFrame.Visible = false
@@ -184,11 +200,10 @@ BgColorButton.MouseButton1Click:Connect(function()
     else
         PaletteFrame.Visible = true
         currentTargetMode = "BG"
-        PaletteFrame.Position = UDim2.new(1, 10, 0, 110) -- Сдвигаем палитру к кнопке фона
+        PaletteFrame.Position = UDim2.new(1, 10, 0, 150)
     end
 end)
 
--- Открытие палитры для текста
 TxtColorButton.MouseButton1Click:Connect(function()
     if PaletteFrame.Visible and currentTargetMode == "TXT" then
         PaletteFrame.Visible = false
@@ -196,11 +211,10 @@ TxtColorButton.MouseButton1Click:Connect(function()
     else
         PaletteFrame.Visible = true
         currentTargetMode = "TXT"
-        PaletteFrame.Position = UDim2.new(1, 10, 0, 150) -- Сдвигаем палитру к кнопке текста
+        PaletteFrame.Position = UDim2.new(1, 10, 0, 190)
     end
 end)
 
--- Логика Сворачивания / Разворачивания меню
 local MenuCollapsed = false
 CollapseButton.MouseButton1Click:Connect(function()
     MenuCollapsed = not MenuCollapsed
@@ -211,21 +225,25 @@ CollapseButton.MouseButton1Click:Connect(function()
         Frame:TweenSize(UDim2.new(0, 160, 0, 35), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
         CollapseButton.Text = "+"
     else
-        Frame:TweenSize(UDim2.new(0, 160, 0, 240), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+        Frame:TweenSize(UDim2.new(0, 160, 0, 330), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
         task.wait(0.1)
         ContentContainer.Visible = true
         CollapseButton.Text = "-"
     end
 end)
 
--- ОРИГИНАЛЬНАЯ ЛОГИКА ИЗ "Mm2 aim.docx"
+-- ЛОГИКА ИГРЫ
 _G.ChamsActive = false
 _G.SilentAimActive = false
+_G.AntiFlingActive = false
+_G.AutoPickupActive = false
+
 local Colors = {
     Murderer = Color3.fromRGB(255, 0, 0),
     Sheriff  = Color3.fromRGB(0, 120, 255),
     Innocent = Color3.fromRGB(0, 255, 0)
 }
+
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -267,6 +285,7 @@ local function CreateBoxCham(part, color)
     box.Parent = part
 end
 
+-- Поток для Чамсов
 task.spawn(function()
     while true do
         task.wait(0.3)
@@ -286,6 +305,54 @@ task.spawn(function()
                         end
                     end
                 end
+            end
+        end
+    end
+end)
+
+-- Поток Анти-Флинга
+task.spawn(function()
+    while true do
+        RunService.Heartbeat:Wait()
+        if _G.AntiFlingActive and LocalPlayer.Character then
+            local char = LocalPlayer.Character
+            for _, part in ipairs(char:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                    -- Сброс бешеной угловой и обычной скорости при коллизиях
+                    if part.Name == "HumanoidRootPart" then
+                        part.Velocity = Vector3.new(part.Velocity.X, math.clamp(part.Velocity.Y, -100, 100), part.Velocity.Z)
+                        part.RotVelocity = Vector3.new(0, 0, 0)
+                    end
+                end
+            end
+            -- Отключение коллизий со всеми остальными игроками
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    for _, part in ipairs(player.Character:GetChildren()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- Поток Авто-Подбора Пистолета
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if _G.AutoPickupActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local gunDrop = workspace:FindFirstChild("GunDrop")
+            if gunDrop and gunDrop:IsA("BasePart") then
+                local hrp = LocalPlayer.Character.HumanoidRootPart
+                local previousCFrame = hrp.CFrame
+                -- Безопасный моментальный ТП к пистолету и обратно
+                hrp.CFrame = gunDrop.CFrame + Vector3.new(0, 1, 0)
+                task.wait(0.1)
+                hrp.CFrame = previousCFrame
             end
         end
     end
@@ -340,6 +407,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+-- КОННЕКТЫ КНОПОК
 ChamsButton.MouseButton1Click:Connect(function()
     _G.ChamsActive = not _G.ChamsActive
     if _G.ChamsActive then
@@ -362,5 +430,27 @@ AimButton.MouseButton1Click:Connect(function()
     else
         AimButton.Text = "AIM: OFF"
         AimButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+    end
+end)
+
+AntiFlingButton.MouseButton1Click:Connect(function()
+    _G.AntiFlingActive = not _G.AntiFlingActive
+    if _G.AntiFlingActive then
+        AntiFlingButton.Text = "ANTI-FLING: ON"
+        AntiFlingButton.BackgroundColor3 = Color3.fromRGB(60, 255, 60)
+    else
+        AntiFlingButton.Text = "ANTI-FLING: OFF"
+        AntiFlingButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+    end
+end)
+
+PickupButton.MouseButton1Click:Connect(function()
+    _G.AutoPickupActive = not _G.AutoPickupActive
+    if _G.AutoPickupActive then
+        PickupButton.Text = "AUTOPICKUP: ON"
+        PickupButton.BackgroundColor3 = Color3.fromRGB(60, 255, 60)
+    else
+        PickupButton.Text = "AUTOPICKUP: OFF"
+        PickupButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
     end
 end)
