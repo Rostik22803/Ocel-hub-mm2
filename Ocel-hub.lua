@@ -208,48 +208,50 @@ CollapseButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- 100% СЧИТЫВАНИЕ ТАЙМЕРА ИЗ ИНТЕРФЕЙСА ИГРЫ (Оригинальный MM2)
+-- ГЛОБАЛЬНЫЙ МЕТОД ПЕРЕХВАТА ЛЮБОГО ВРЕМЕНИ ИЗ ИГРЫ
 local TimerActive = false
 local timerCoroutine = nil
 
-local function GetMM2GuiTime()
+local function FormatTime(seconds)
+    if not seconds or seconds <= 0 then return "00:00" end
+    local mins = math.floor(seconds / 60)
+    local secs = math.floor(seconds % 60)
+    return string.format("%02d:%02d", mins, secs)
+end
+
+local function SmartScanMM2Time()
     local player = game:GetService("Players").LocalPlayer
     local pGui = player:FindFirstChild("PlayerGui")
     
-    -- Ищем основной GUI интерфейс MM2
-    local mainGui = pGui and (pGui:FindFirstChild("MainGui") or pGui:FindFirstChild("ManiGui") or pGui:FindFirstChild("GameGui"))
-    if mainGui then
-        -- Путь 1: Верхняя панель (Обычное отображение времени)
-        local topBar = mainGui:FindFirstChild("TopList") or mainGui:FindFirstChild("TopBar") or mainGui:FindFirstChild("Container")
-        local timerLabel = topBar and (topBar:FindFirstChild("Timer") or topBar:FindFirstChild("TimeLabel") or topBar:FindFirstChild("Duration"))
-        
-        -- Путь 2: Альтернативный поиск по всем элементам, если интерфейс кастомный
-        if not timerLabel then
-            for _, v in ipairs(mainGui:GetDescendants()) do
-                if v:IsA("TextLabel") and (v.Name:lower():find("timer") or v.Name:lower():find("time")) and v.Visible then
-                    timerLabel = v
-                    break
+    -- 1. Сканируем вообще все TextLabel в PlayerGui на предмет текста формата "0:00"
+    if pGui then
+        for _, label in ipairs(pGui:GetDescendants()) do
+            if label:IsA("TextLabel") and label.Visible and label.Text ~= "" then
+                local text = label.Text
+                -- Проверяем паттерн времени (например: "2:30", "01:15", "0:05")
+                if text:match("%d+:%d+") then
+                    -- Отсекаем лишний мусор, оставляя только "Название: Время"
+                    if label.Name:lower():find("timer") or label.Parent.Name:lower():find("timer") or label.Name:lower():find("time") then
+                        return text
+                    end
+                    return text
                 end
-            end
-        end
-        
-        if timerLabel and timerLabel.Text ~= "" then
-            local text = timerLabel.Text
-            -- Если текст содержит "Прерывание" или "Выбор", определяем как лобби
-            if text:find(":") then
-                return text
-            else
-                return "Time: " .. text
             end
         end
     end
     
-    -- Резервный поиск через ReplicatedStorage (если GUI еще не прогрузился)
+    -- 2. Если в GUI пусто (например загрузка), проверяем внутренние настройки репликации
     local repl = game:GetService("ReplicatedStorage")
-    local tToClose = repl:FindFirstChild("TimerToClose") or repl:FindFirstChild("RoundTimer") or repl:FindFirstChild("LobbyTimer")
-    if tToClose and tonumber(tToClose.Value) then
-        local sec = tonumber(tToClose.Value)
-        return string.format("%02d:%02d", math.floor(sec/60), sec%60)
+    for _, obj in ipairs(repl:GetDescendants()) do
+        if (obj:IsA("IntValue") or obj:IsA("NumberValue") or obj:IsA("StringValue")) and obj.Value ~= "" then
+            local name = obj.Name:lower()
+            if name:find("timer") or name:find("time") then
+                local val = tonumber(obj.Value)
+                if val and val > 0 then
+                    return FormatTime(val)
+                end
+            end
+        end
     end
 
     return nil
@@ -264,15 +266,14 @@ TimerButton.MouseButton1Click:Connect(function()
         
         timerCoroutine = task.spawn(function()
             while TimerActive do
-                local currentDisplayTime = GetMM2GuiTime()
+                local detectedTime = SmartScanMM2Time()
                 
-                if currentDisplayTime then
-                    -- Автоматически подрезаем лишние слова, если игра пишет "Time Left: 01:20"
-                    TimerTextLabel.Text = currentDisplayTime
+                if detectedTime then
+                    TimerTextLabel.Text = "Time: " .. detectedTime
                 else
-                    TimerTextLabel.Text = "Searching..."
+                    TimerTextLabel.Text = "No Round / --:--"
                 end
-                task.wait(0.5) -- Быстрое и легкое обновление без лагов
+                task.wait(0.5) -- Легкое и быстрое обновление
             end
         end)
     else
