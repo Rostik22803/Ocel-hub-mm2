@@ -13,6 +13,9 @@ local AntiFlingButton = Instance.new("TextButton")
 local UICornerFling = Instance.new("UICorner")
 local PickupButton = Instance.new("TextButton")
 local UICornerPickup = Instance.new("UICorner")
+-- НОВАЯ КНОПКА: Киллаура
+local KillAuraButton = Instance.new("TextButton")
+local UICornerKillAura = Instance.new("UICorner")
 
 -- Элементы управления меню
 local HeaderLabel = Instance.new("TextLabel")
@@ -33,11 +36,12 @@ ScreenGui.Name = "MM2_Ultimate_v5"
 ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
--- ГЛАВНОЕ МЕНЮ
+-- ГЛАВНОЕ МЕНЮ (Размер увеличен с 375 до 415, чтобы влезла новая кнопка)
+local MainFrameHeight = 415
 Frame.Parent = ScreenGui
 Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Frame.Position = UDim2.new(0.05, 0, 0.1, 0)
-Frame.Size = UDim2.new(0, 160, 0, 375)
+Frame.Size = UDim2.new(0, 160, 0, MainFrameHeight)
 Frame.Active = true
 Frame.Draggable = true
 Frame.ClipsDescendants = false
@@ -93,12 +97,13 @@ ApplyButtonStyles(AimButton, UICornerAim, "AIM", 40)
 ApplyButtonStyles(NoclipButton, UICornerNoclip, "NOCLIP", 80)
 ApplyButtonStyles(AntiFlingButton, UICornerFling, "ANTI-FLING", 120)
 ApplyButtonStyles(PickupButton, UICornerPickup, "AUTOPICKUP", 160)
+ApplyButtonStyles(KillAuraButton, UICornerKillAura, "KILL AURA", 200) -- Новая кнопка
 
--- КНОПКИ ЦВЕТА
+-- КНОПКИ ЦВЕТА (Смещены вниз на 40 пикселей)
 BgColorButton.Name = "BgColorButton"
 BgColorButton.Parent = ContentContainer
 BgColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-BgColorButton.Position = UDim2.new(0, 10, 0, 210)
+BgColorButton.Position = UDim2.new(0, 10, 0, 250)
 BgColorButton.Size = UDim2.new(0, 140, 0, 30)
 BgColorButton.Font = Enum.Font.SourceSansBold
 BgColorButton.Text = "BG COLOR"
@@ -110,7 +115,7 @@ UICornerBgBtn.Parent = BgColorButton
 TxtColorButton.Name = "TxtColorButton"
 TxtColorButton.Parent = ContentContainer
 TxtColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-TxtColorButton.Position = UDim2.new(0, 10, 0, 245)
+TxtColorButton.Position = UDim2.new(0, 10, 0, 285)
 TxtColorButton.Size = UDim2.new(0, 140, 0, 30)
 TxtColorButton.Font = Enum.Font.SourceSansBold
 TxtColorButton.Text = "TXT COLOR"
@@ -139,9 +144,7 @@ local PopularColors = {
     Color3.fromRGB(0, 255, 255), Color3.fromRGB(255, 0, 255), Color3.fromRGB(255, 165, 0),
     Color3.fromRGB(128, 0, 128), Color3.fromRGB(255, 192, 203), Color3.fromRGB(170, 255, 0)
 }
-
 local currentTargetMode = "None"
-
 for _, color in ipairs(PopularColors) do
     local ColorBtn = Instance.new("TextButton")
     ColorBtn.Text = ""
@@ -160,6 +163,7 @@ for _, color in ipairs(PopularColors) do
             NoclipButton.TextColor3 = color
             AntiFlingButton.TextColor3 = color
             PickupButton.TextColor3 = color
+            KillAuraButton.TextColor3 = color
             BgColorButton.TextColor3 = color
             TxtColorButton.TextColor3 = color
         end
@@ -198,7 +202,7 @@ CollapseButton.MouseButton1Click:Connect(function()
         Frame:TweenSize(UDim2.new(0, 160, 0, 35), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
         CollapseButton.Text = "+"
     else
-        Frame:TweenSize(UDim2.new(0, 160, 0, 375), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+        Frame:TweenSize(UDim2.new(0, 160, 0, MainFrameHeight), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
         task.wait(0.1)
         ContentContainer.Visible = true
         CollapseButton.Text = "-"
@@ -211,6 +215,11 @@ _G.SilentAimActive = false
 _G.NoclipActive = false
 _G.AntiFlingActive = false
 _G.AutoPickupActive = false
+_G.KillAuraActive = false -- Статус киллауры
+
+-- НАСТРОЙКИ КИЛЛАУРЫ (Можно менять под себя прямо здесь)
+_G.KillAuraRange = 15     -- Радиус действия (в студах)
+_G.KillAuraDelay = 0.1    -- Задержка между ударами (в секундах)
 
 local Colors = {
     Murderer = Color3.fromRGB(255, 0, 0),
@@ -312,20 +321,16 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- ИСПРАВЛЕННЫЙ АВТОПОДБОР ПИСТОЛЕТА С ФИКСАЦИЕЙ НА ПОЗИЦИИ (С ПРОВЕРКОЙ НА МАРДЕРА)
+-- ИСПРАВЛЕННЫЙ АВТОПОДБОР ПИСТОЛЕТА
 task.spawn(function()
     while true do
         task.wait(0.1)
-        -- Добавлена проверка: подбор работает только если кнопка включена И ты НЕ Мардер
         if _G.AutoPickupActive and GetRole(LocalPlayer) ~= "Murderer" and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
             local gunInstance = nil
-            
-            -- Сканируем окружение на наличие пистолета
             local drop = workspace:FindFirstChild("GunDrop")
             if drop then
                 gunInstance = drop
             else
-                -- Поиск в картах/папках MM2
                 for _, obj in ipairs(workspace:GetDescendants()) do
                     if obj.Name == "GunDrop" or (obj:IsA("TouchTransmitter") and obj.Parent and obj.Parent.Name == "LeftHand") then
                         if obj:IsA("BasePart") then
@@ -339,22 +344,17 @@ task.spawn(function()
                 end
             end
             
-            -- Если пистолет найден
             if gunInstance and gunInstance:IsA("BasePart") then
                 local hrp = LocalPlayer.Character.HumanoidRootPart
                 local oldCFrame = hrp.CFrame
-                
-                -- Удерживаем персонажа на пистолете, чтобы сервер успел зарегистрировать хитбокс
                 local checkTime = 0
                 while gunInstance and gunInstance.Parent and checkTime < 0.3 do
                     hrp.CFrame = gunInstance.CFrame
                     RunService.Heartbeat:Wait()
                     checkTime = checkTime + game:GetService("RunService").Heartbeat:Wait()
                 end
-                
-                -- Возврат обратно на позицию
                 hrp.CFrame = oldCFrame
-                task.wait(0.5) -- Кулдаун, чтобы не спамило телепортами
+                task.wait(0.5)
             end
         end
     end
@@ -409,6 +409,44 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+-- ЛОГИКА РАБОТЫ КИЛЛАУРЫ
+task.spawn(function()
+    while true do
+        task.wait(_G.KillAuraDelay) -- Задержка между проверками/атаками
+        
+        -- Условия: Включена киллаура + мы Мардер + живы
+        if _G.KillAuraActive and GetRole(LocalPlayer) == "Murderer" and LocalPlayer.Character then
+            local knife = LocalPlayer.Character:FindFirstChild("Knife") or LocalPlayer.Backpack:FindFirstChild("Knife")
+            
+            if knife then
+                -- Автоматически берем нож в руки, если он в рюкзаке
+                if knife.Parent == LocalPlayer.Backpack then
+                    knife.Parent = LocalPlayer.Character
+                end
+                
+                local myHrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if myHrp then
+                    -- Ищем ближайшую жертву в радиусе
+                    for _, player in ipairs(Players:GetPlayers()) do
+                        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                            local targetHrp = player.Character.HumanoidRootPart
+                            local distance = (myHrp.Position - targetHrp.Position).Magnitude
+                            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                            
+                            -- Если игрок в зоне действия и он жив
+                            if distance <= _G.KillAuraRange and humanoid and humanoid.Health > 0 then
+                                -- Имитируем удар ножом по хитбоксу игрока
+                                firetouchinsert(knife:FindFirstChild("Handle"), targetHrp, 1)
+                                firetouchinsert(knife:FindFirstChild("Handle"), targetHrp, 0)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
 -- ОБРАБОТКА НАЖАТИЙ КНОПОК
 ChamsButton.MouseButton1Click:Connect(function()
     _G.ChamsActive = not _G.ChamsActive
@@ -441,4 +479,11 @@ PickupButton.MouseButton1Click:Connect(function()
     _G.AutoPickupActive = not _G.AutoPickupActive
     PickupButton.Text = _G.AutoPickupActive and "AUTOPICKUP: ON" or "AUTOPICKUP: OFF"
     PickupButton.BackgroundColor3 = _G.AutoPickupActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
+end)
+
+-- Нажатие кнопки KILL AURA
+KillAuraButton.MouseButton1Click:Connect(function()
+    _G.KillAuraActive = not _G.KillAuraActive
+    KillAuraButton.Text = _G.KillAuraActive and "KILL AURA: ON" or "KILL AURA: OFF"
+    KillAuraButton.BackgroundColor3 = _G.KillAuraActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
 end)
