@@ -1,11 +1,13 @@
 local ScreenGui = Instance.new("ScreenGui")
 local Frame = Instance.new("Frame")
 local UICornerFrame = Instance.new("UICorner")
+-- Кнопки функций
 local ChamsButton = Instance.new("TextButton")
 local UICornerChams = Instance.new("UICorner")
 local AimButton = Instance.new("TextButton")
 local UICornerAim = Instance.new("UICorner")
--- Новые кнопки функций
+local NoclipButton = Instance.new("TextButton")
+local UICornerNoclip = Instance.new("UICorner")
 local AntiFlingButton = Instance.new("TextButton")
 local UICornerFling = Instance.new("UICorner")
 local PickupButton = Instance.new("TextButton")
@@ -19,12 +21,12 @@ local BgColorButton = Instance.new("TextButton")
 local UICornerBgBtn = Instance.new("UICorner")
 local TxtColorButton = Instance.new("TextButton")
 local UICornerTxtBtn = Instance.new("UICorner")
--- Фрейм палитры (общий для выбора)
+-- Фрейм палитры
 local PaletteFrame = Instance.new("Frame")
 local UIGridLayout = Instance.new("UIGridLayout")
 local PaletteCorner = Instance.new("UICorner")
 
-ScreenGui.Name = "MM2_Ultimate_v3"
+ScreenGui.Name = "MM2_Ultimate_v4"
 ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
@@ -32,14 +34,14 @@ ScreenGui.ResetOnSpawn = false
 Frame.Parent = ScreenGui
 Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Frame.Position = UDim2.new(0.05, 0, 0.1, 0)
-Frame.Size = UDim2.new(0, 160, 0, 330) -- Размер увеличен для новых кнопок
+Frame.Size = UDim2.new(0, 160, 0, 375) -- Высота скорректирована под 5 кнопок
 Frame.Active = true
 Frame.Draggable = true
 Frame.ClipsDescendants = false
 UICornerFrame.CornerRadius = UDim.new(0, 8)
 UICornerFrame.Parent = Frame
 
--- НАДПИСЬ OCEL-HUB (Видна всегда)
+-- НАДПИСЬ OCEL-HUB
 HeaderLabel.Name = "HeaderLabel"
 HeaderLabel.Parent = Frame
 HeaderLabel.BackgroundTransparency = 1
@@ -69,89 +71,54 @@ ContentContainer.BackgroundTransparency = 1
 ContentContainer.Position = UDim2.new(0, 0, 0, 35)
 ContentContainer.Size = UDim2.new(1, 0, 1, -35)
 
--- Кнопка Чамсов
-ChamsButton.Name = "ChamsButton"
-ChamsButton.Parent = ContentContainer
-ChamsButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-ChamsButton.Position = UDim2.new(0, 10, 0, 0)
-ChamsButton.Size = UDim2.new(0, 140, 0, 40)
-ChamsButton.Font = Enum.Font.SourceSansBold
-ChamsButton.Text = "CHAMS: OFF"
-ChamsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ChamsButton.TextSize = 16
-UICornerChams.CornerRadius = UDim.new(0, 6)
-UICornerChams.Parent = ChamsButton
+local function ApplyButtonStyles(btn, corner, text, yPos)
+    btn.Parent = ContentContainer
+    btn.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+    btn.Position = UDim2.new(0, 10, 0, yPos)
+    btn.Size = UDim2.new(0, 140, 0, 35)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.Text = text .. ": OFF"
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 14
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+end
 
--- Кнопка Аимбота
-AimButton.Name = "AimButton"
-AimButton.Parent = ContentContainer
-AimButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-AimButton.Position = UDim2.new(0, 10, 0, 45)
-AimButton.Size = UDim2.new(0, 140, 0, 40)
-AimButton.Font = Enum.Font.SourceSansBold
-AimButton.Text = "AIM: OFF"
-AimButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-AimButton.TextSize = 16
-UICornerAim.CornerRadius = UDim.new(0, 6)
-UICornerAim.Parent = AimButton
+ApplyButtonStyles(ChamsButton, UICornerChams, "CHAMS", 0)
+ApplyButtonStyles(AimButton, UICornerAim, "AIM", 40)
+ApplyButtonStyles(NoclipButton, UICornerNoclip, "NOCLIP", 80)
+ApplyButtonStyles(AntiFlingButton, UICornerFling, "ANTI-FLING", 120)
+ApplyButtonStyles(PickupButton, UICornerPickup, "AUTOPICKUP", 160)
 
--- Кнопка Анти-Флинг
-AntiFlingButton.Name = "AntiFlingButton"
-AntiFlingButton.Parent = ContentContainer
-AntiFlingButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-AntiFlingButton.Position = UDim2.new(0, 10, 0, 90)
-AntiFlingButton.Size = UDim2.new(0, 140, 0, 40)
-AntiFlingButton.Font = Enum.Font.SourceSansBold
-AntiFlingButton.Text = "ANTI-FLING: OFF"
-AntiFlingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-AntiFlingButton.TextSize = 16
-UICornerFling.CornerRadius = UDim.new(0, 6)
-UICornerFling.Parent = AntiFlingButton
-
--- Кнопка Авто-Подбора
-PickupButton.Name = "PickupButton"
-PickupButton.Parent = ContentContainer
-PickupButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-PickupButton.Position = UDim2.new(0, 10, 0, 135)
-PickupButton.Size = UDim2.new(0, 140, 0, 40)
-PickupButton.Font = Enum.Font.SourceSansBold
-PickupButton.Text = "AUTOPICKUP: OFF"
-PickupButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-PickupButton.TextSize = 16
-UICornerPickup.CornerRadius = UDim.new(0, 6)
-UICornerPickup.Parent = PickupButton
-
--- КНОПКА ИЗМЕНЕНИЯ ЦВЕТА ФОНА
+-- КНОПКИ ЦВЕТА
 BgColorButton.Name = "BgColorButton"
 BgColorButton.Parent = ContentContainer
 BgColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-BgColorButton.Position = UDim2.new(0, 10, 0, 185)
-BgColorButton.Size = UDim2.new(0, 140, 0, 35)
+BgColorButton.Position = UDim2.new(0, 10, 0, 210)
+BgColorButton.Size = UDim2.new(0, 140, 0, 30)
 BgColorButton.Font = Enum.Font.SourceSansBold
 BgColorButton.Text = "BG COLOR"
 BgColorButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-BgColorButton.TextSize = 14
+BgColorButton.TextSize = 13
 UICornerBgBtn.CornerRadius = UDim.new(0, 6)
 UICornerBgBtn.Parent = BgColorButton
 
--- КНОПКА ИЗМЕНЕНИЯ ЦВЕТА ТЕКСТА
 TxtColorButton.Name = "TxtColorButton"
 TxtColorButton.Parent = ContentContainer
 TxtColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-TxtColorButton.Position = UDim2.new(0, 10, 0, 225)
-TxtColorButton.Size = UDim2.new(0, 140, 0, 35)
+TxtColorButton.Position = UDim2.new(0, 10, 0, 245)
+TxtColorButton.Size = UDim2.new(0, 140, 0, 30)
 TxtColorButton.Font = Enum.Font.SourceSansBold
 TxtColorButton.Text = "TXT COLOR"
 TxtColorButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-TxtColorButton.TextSize = 14
+TxtColorButton.TextSize = 13
 UICornerTxtBtn.CornerRadius = UDim.new(0, 6)
 UICornerTxtBtn.Parent = TxtColorButton
 
--- СЕТКА С ПАЛИТРОЙ ЦВЕТОВ
+-- ПАЛИТРА
 PaletteFrame.Name = "PaletteFrame"
 PaletteFrame.Parent = Frame
 PaletteFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-PaletteFrame.Position = UDim2.new(1, 10, 0, 0)
 PaletteFrame.Size = UDim2.new(0, 110, 0, 140)
 PaletteFrame.Visible = false
 PaletteCorner.CornerRadius = UDim.new(0, 6)
@@ -185,6 +152,7 @@ for _, color in ipairs(PopularColors) do
             CollapseButton.TextColor3 = color
             ChamsButton.TextColor3 = color
             AimButton.TextColor3 = color
+            NoclipButton.TextColor3 = color
             AntiFlingButton.TextColor3 = color
             PickupButton.TextColor3 = color
             BgColorButton.TextColor3 = color
@@ -200,7 +168,7 @@ BgColorButton.MouseButton1Click:Connect(function()
     else
         PaletteFrame.Visible = true
         currentTargetMode = "BG"
-        PaletteFrame.Position = UDim2.new(1, 10, 0, 150)
+        PaletteFrame.Position = UDim2.new(1, 10, 0, 180)
     end
 end)
 
@@ -211,7 +179,7 @@ TxtColorButton.MouseButton1Click:Connect(function()
     else
         PaletteFrame.Visible = true
         currentTargetMode = "TXT"
-        PaletteFrame.Position = UDim2.new(1, 10, 0, 190)
+        PaletteFrame.Position = UDim2.new(1, 10, 0, 210)
     end
 end)
 
@@ -225,16 +193,17 @@ CollapseButton.MouseButton1Click:Connect(function()
         Frame:TweenSize(UDim2.new(0, 160, 0, 35), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
         CollapseButton.Text = "+"
     else
-        Frame:TweenSize(UDim2.new(0, 160, 0, 330), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+        Frame:TweenSize(UDim2.new(0, 160, 0, 375), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
         task.wait(0.1)
         ContentContainer.Visible = true
         CollapseButton.Text = "-"
     end
 end)
 
--- ЛОГИКА ИГРЫ
+-- НАСТРОЙКИ ФУНКЦИЙ ГЕЙМПЛЕЯ
 _G.ChamsActive = false
 _G.SilentAimActive = false
+_G.NoclipActive = false
 _G.AntiFlingActive = false
 _G.AutoPickupActive = false
 
@@ -254,7 +223,6 @@ local function GetRole(player)
     if not player then return "Innocent" end
     local bpack = player:FindFirstChild("Backpack")
     local char = player.Character
-    
     if (bpack and bpack:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife")) then
         return "Murderer"
     elseif (bpack and (bpack:FindFirstChild("Gun") or bpack:FindFirstChild("Revolver"))) or 
@@ -285,7 +253,7 @@ local function CreateBoxCham(part, color)
     box.Parent = part
 end
 
--- Поток для Чамсов
+-- Поток Чамсов
 task.spawn(function()
     while true do
         task.wait(0.3)
@@ -297,11 +265,7 @@ task.spawn(function()
                     for _, part in ipairs(player.Character:GetChildren()) do
                         if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
                             local existingCham = part:FindFirstChild("MM2_BoxCham")
-                            if existingCham then
-                                existingCham.Color3 = color
-                            else
-                                CreateBoxCham(part, color)
-                            end
+                            if existingCham then existingCham.Color3 = color else CreateBoxCham(part, color) end
                         end
                     end
                 end
@@ -310,54 +274,80 @@ task.spawn(function()
     end
 end)
 
--- Поток Анти-Флинга
-task.spawn(function()
-    while true do
-        RunService.Heartbeat:Wait()
-        if _G.AntiFlingActive and LocalPlayer.Character then
-            local char = LocalPlayer.Character
-            for _, part in ipairs(char:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                    -- Сброс бешеной угловой и обычной скорости при коллизиях
-                    if part.Name == "HumanoidRootPart" then
-                        part.Velocity = Vector3.new(part.Velocity.X, math.clamp(part.Velocity.Y, -100, 100), part.Velocity.Z)
+-- Поток NOCLIP
+RunService.Stepped:Connect(function()
+    if _G.NoclipActive and LocalPlayer.Character then
+        for _, part in ipairs(LocalPlayer.Character:GetChildren()) do
+            if part:IsA("BasePart") then part.CanCollide = false end
+        end
+    end
+end)
+
+-- НАСТОЯЩИЙ ANTI-FLING (Физическое подавление импульса)
+RunService.Heartbeat:Connect(function()
+    if _G.AntiFlingActive and LocalPlayer.Character then
+        local myHrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if myHrp then
+            -- Если скорость резко возрастает из-за удара флинг-бота, гасим ее
+            if myHrp.Velocity.Magnitude > 75 or myHrp.RotVelocity.Magnitude > 75 then
+                myHrp.Velocity = Vector3.new(0, 0, 0)
+                myHrp.RotVelocity = Vector3.new(0, 0, 0)
+            end
+        end
+        -- Отключаем симуляцию передачи массы и векторов от чужих хитбоксов
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                for _, part in ipairs(player.Character:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                        part.Velocity = Vector3.new(0, 0, 0)
                         part.RotVelocity = Vector3.new(0, 0, 0)
                     end
                 end
             end
-            -- Отключение коллизий со всеми остальными игроками
-            for _, player in ipairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer and player.Character then
-                    for _, part in ipairs(player.Character:GetChildren()) do
-                        if part:IsA("BasePart") then
-                            part.CanCollide = false
-                        end
+        end
+    end
+end)
+
+-- ИСПРАВЛЕННЫЙ И НАДЕЖНЫЙ АВТОПОДБОР ПИСТОЛЕТА
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if _G.AutoPickupActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local targetGun = nil
+            
+            -- Поиск во всех возможных вариациях спавна пистолета в MM2
+            local gunDrop = workspace:FindFirstChild("GunDrop")
+            if gunDrop then
+                targetGun = gunDrop
+            else
+                for _, obj in ipairs(workspace:GetChildren()) do
+                    if (obj.Name == "GunPickup" or obj:IsA("Tool") and (obj.Name:lower():find("gun") or obj.Name:lower():find("revolver"))) and obj:IsA("BasePart") then
+                        targetGun = obj
+                        break
+                    elseif obj:IsA("Model") and (obj.Name:lower():find("gun") or obj.Name:lower():find("pickup")) then
+                        local part = obj:FindFirstChildWhichIsA("BasePart")
+                        if part then targetGun = part break end
                     end
+                end
+            end
+            
+            if targetGun then
+                local hrp = LocalPlayer.Character.HumanoidRootPart
+                local oldCFrame = hrp.CFrame
+                -- Телепорт строго на хитбокс пистолета
+                hrp.CFrame = targetGun.CFrame
+                task.wait(0.15)
+                -- Возврат обратно, если пистолет подобрался успешно
+                if not targetGun.Parent or targetGun:FindFirstChild("Player") then
+                    hrp.CFrame = oldCFrame
                 end
             end
         end
     end
 end)
 
--- Поток Авто-Подбора Пистолета
-task.spawn(function()
-    while true do
-        task.wait(0.1)
-        if _G.AutoPickupActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local gunDrop = workspace:FindFirstChild("GunDrop")
-            if gunDrop and gunDrop:IsA("BasePart") then
-                local hrp = LocalPlayer.Character.HumanoidRootPart
-                local previousCFrame = hrp.CFrame
-                -- Безопасный моментальный ТП к пистолету и обратно
-                hrp.CFrame = gunDrop.CFrame + Vector3.new(0, 1, 0)
-                task.wait(0.1)
-                hrp.CFrame = previousCFrame
-            end
-        end
-    end
-end)
-
+-- АИМБОТ И ЦЕЛИ
 local function GetClosestTarget()
     local myRole = GetRole(LocalPlayer)
     local closestPlayer = nil
@@ -400,57 +390,42 @@ RunService.RenderStepped:Connect(function()
         if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
             local target = GetClosestTarget()
             if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-                local targetPos = target.Character.HumanoidRootPart.Position
-                Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPos)
+                Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.HumanoidRootPart.Position)
             end
         end
     end
 end)
 
--- КОННЕКТЫ КНОПОК
+-- ОБРАБОТКА НАЖАТИЙ КНОПОК И СМЕНА ТЕКСТА
 ChamsButton.MouseButton1Click:Connect(function()
     _G.ChamsActive = not _G.ChamsActive
-    if _G.ChamsActive then
-        ChamsButton.Text = "CHAMS: ON"
-        ChamsButton.BackgroundColor3 = Color3.fromRGB(60, 255, 60)
-    else
-        ChamsButton.Text = "CHAMS: OFF"
-        ChamsButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player.Character then ClearChams(player.Character) end
-        end
+    ChamsButton.Text = _G.ChamsActive and "CHAMS: ON" or "CHAMS: OFF"
+    ChamsButton.BackgroundColor3 = _G.ChamsActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
+    if not _G.ChamsActive then
+        for _, player in ipairs(Players:GetPlayers()) do if player.Character then ClearChams(player.Character) end end
     end
 end)
 
 AimButton.MouseButton1Click:Connect(function()
     _G.SilentAimActive = not _G.SilentAimActive
-    if _G.SilentAimActive then
-        AimButton.Text = "AIM: ON"
-        AimButton.BackgroundColor3 = Color3.fromRGB(60, 255, 60)
-    else
-        AimButton.Text = "AIM: OFF"
-        AimButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-    end
+    AimButton.Text = _G.SilentAimActive and "AIM: ON" or "AIM: OFF"
+    AimButton.BackgroundColor3 = _G.SilentAimActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
+end)
+
+NoclipButton.MouseButton1Click:Connect(function()
+    _G.NoclipActive = not _G.NoclipActive
+    NoclipButton.Text = _G.NoclipActive and "NOCLIP: ON" or "NOCLIP: OFF"
+    NoclipButton.BackgroundColor3 = _G.NoclipActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
 end)
 
 AntiFlingButton.MouseButton1Click:Connect(function()
     _G.AntiFlingActive = not _G.AntiFlingActive
-    if _G.AntiFlingActive then
-        AntiFlingButton.Text = "ANTI-FLING: ON"
-        AntiFlingButton.BackgroundColor3 = Color3.fromRGB(60, 255, 60)
-    else
-        AntiFlingButton.Text = "ANTI-FLING: OFF"
-        AntiFlingButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-    end
+    AntiFlingButton.Text = _G.AntiFlingActive and "ANTI-FLING: ON" or "ANTI-FLING: OFF"
+    AntiFlingButton.BackgroundColor3 = _G.AntiFlingActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
 end)
 
 PickupButton.MouseButton1Click:Connect(function()
     _G.AutoPickupActive = not _G.AutoPickupActive
-    if _G.AutoPickupActive then
-        PickupButton.Text = "AUTOPICKUP: ON"
-        PickupButton.BackgroundColor3 = Color3.fromRGB(60, 255, 60)
-    else
-        PickupButton.Text = "AUTOPICKUP: OFF"
-        PickupButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-    end
+    PickupButton.Text = _G.AutoPickupActive and "AUTOPICKUP: ON" or "AUTOPICKUP: OFF"
+    PickupButton.BackgroundColor3 = _G.AutoPickupActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
 end)
