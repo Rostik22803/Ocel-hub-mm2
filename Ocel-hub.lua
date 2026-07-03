@@ -1,3 +1,4 @@
+
 local ScreenGui = Instance.new("ScreenGui")
 local Frame = Instance.new("Frame")
 local UICornerFrame = Instance.new("UICorner")
@@ -35,7 +36,6 @@ local UICornerDSF = Instance.new("UICorner")
 local UICornerDSB = Instance.new("UICorner")
 local UICornerDSBtn = Instance.new("UICorner")
 
--- Новый ползунок для Спидхака
 local SpeedSliderFrame = Instance.new("Frame")
 local SpeedSliderBar = Instance.new("Frame")
 local SpeedSliderButton = Instance.new("TextButton")
@@ -43,6 +43,23 @@ local SpeedSliderLabel = Instance.new("TextLabel")
 local UICornerSSF = Instance.new("UICorner")
 local UICornerSSB = Instance.new("UICorner")
 local UICornerSSBtn = Instance.new("UICorner")
+
+-- НОВЫЕ ПОЛЗУНКИ ДЛЯ FOV
+local FOVSizeSliderFrame = Instance.new("Frame")
+local FOVSizeSliderBar = Instance.new("Frame")
+local FOVSizeSliderButton = Instance.new("TextButton")
+local FOVSizeSliderLabel = Instance.new("TextLabel")
+local UICornerFSSF = Instance.new("UICorner")
+local UICornerFSSB = Instance.new("UICorner")
+local UICornerFSSBtn = Instance.new("UICorner")
+
+local FOVColorSliderFrame = Instance.new("Frame")
+local FOVColorSliderBar = Instance.new("Frame")
+local FOVColorSliderButton = Instance.new("TextButton")
+local FOVColorSliderLabel = Instance.new("TextLabel")
+local UICornerFCSF = Instance.new("UICorner")
+local UICornerFCSB = Instance.new("UICorner")
+local UICornerFCSBtn = Instance.new("UICorner")
 
 -- Элементы управления меню
 local HeaderLabel = Instance.new("TextLabel")
@@ -63,8 +80,8 @@ ScreenGui.Name = "MM2_Ultimate_v5"
 ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
--- ГЛАВНОЕ МЕНЮ (Высота увеличена для размещения нового ползунка)
-local MainFrameHeight = 585
+-- ГЛАВНОЕ МЕНЮ (Высота увеличена для размещения новых ползунков FOV)
+local MainFrameHeight = 670
 Frame.Parent = ScreenGui
 Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Frame.Position = UDim2.new(0.05, 0, 0.1, 0)
@@ -120,7 +137,7 @@ local function ApplyButtonStyles(btn, corner, text, yPos)
 end
 
 ApplyButtonStyles(ChamsButton, UICornerChams, "CHAMS", 0)
-ApplyButtonStyles(AimButton, UICornerAim, "AIM", 40)
+ApplyButtonStyles(AimButton, UICornerAim, "AIM FOV", 40)
 ApplyButtonStyles(NoclipButton, UICornerNoclip, "NOCLIP", 80)
 ApplyButtonStyles(AntiFlingButton, UICornerFling, "ANTI-FLING", 120)
 ApplyButtonStyles(PickupButton, UICornerPickup, "AUTOPICKUP", 160)
@@ -135,10 +152,22 @@ _G.AntiFlingActive = false
 _G.AutoPickupActive = false
 _G.KillAuraActive = false
 _G.SpeedActive = false
-
-_G.SpeedValue = 40        -- Скорость по умолчанию
+_G.SpeedValue = 40        
 _G.KillAuraRange = 15     
 _G.KillAuraDelay = 0.1    
+
+-- Дефолты для FOV Аима
+_G.AimFOVSize = 100
+_G.AimFOVColor = Color3.fromRGB(255, 255, 255)
+
+-- Создание визуального FOV круга на экране (через Drawing API)
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Position = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y / 2)
+FOVCircle.Radius = _G.AimFOVSize
+FOVCircle.Color = _G.AimFOVColor
+FOVCircle.Thickness = 1
+FOVCircle.Filled = false
+FOVCircle.Visible = false
 
 -- ФУНКЦИЯ СОЗДАНИЯ И СТАБИЛИЗАЦИИ ПОЛЗУНКОВ
 local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, btnCorner, text, yPos, currentVal, minVal, maxVal, sliderType)
@@ -187,14 +216,27 @@ local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, 
         if sliderType == "Decimal" then
             val = math.round(val * 100) / 100
             _G.KillAuraDelay = val
+            label.Text = text .. ": " .. tostring(val)
         elseif sliderType == "Speed" then
             val = math.round(val)
             _G.SpeedValue = val
+            label.Text = text .. ": " .. tostring(val)
+        elseif sliderType == "FOVSize" then
+            val = math.round(val)
+            _G.AimFOVSize = val
+            FOVCircle.Radius = val
+            label.Text = text .. ": " .. tostring(val)
+        elseif sliderType == "FOVColor" then
+            -- Слайдер меняет Hue (оттенок цветности)
+            local color = Color3.fromHSV(relativeX, 1, 1)
+            _G.AimFOVColor = color
+            FOVCircle.Color = color
+            label.Text = text
         else
             val = math.round(val)
             _G.KillAuraRange = val
+            label.Text = text .. ": " .. tostring(val)
         end
-        label.Text = text .. ": " .. tostring(val)
     end
     
     btn.InputBegan:Connect(function(input)
@@ -214,16 +256,19 @@ local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, 
     end)
 end
 
--- Инициализация ползунков (Добавлен ползунок для Speedhack)
+-- Инициализация ползунков
 CreateSlider(RangeSliderFrame, RangeSliderBar, RangeSliderButton, RangeSliderLabel, UICornerRSF, UICornerRSB, UICornerRSBtn, "Range (Distance)", 285, _G.KillAuraRange, 5, 50, "Integer")
 CreateSlider(DelaySliderFrame, DelaySliderBar, DelaySliderButton, DelaySliderLabel, UICornerDSF, UICornerDSB, UICornerDSBtn, "Attack Delay (Sec)", 325, _G.KillAuraDelay, 0.01, 0.5, "Decimal")
 CreateSlider(SpeedSliderFrame, SpeedSliderBar, SpeedSliderButton, SpeedSliderLabel, UICornerSSF, UICornerSSB, UICornerSSBtn, "Speed Value", 365, _G.SpeedValue, 16, 150, "Speed")
+-- Новые ползунки настроек FOV аима
+CreateSlider(FOVSizeSliderFrame, FOVSizeSliderBar, FOVSizeSliderButton, FOVSizeSliderLabel, UICornerFSSF, UICornerFSSB, UICornerFSSBtn, "FOV Size", 405, _G.AimFOVSize, 10, 500, "FOVSize")
+CreateSlider(FOVColorSliderFrame, FOVColorSliderBar, FOVColorSliderButton, FOVColorSliderLabel, UICornerFCSF, UICornerFCSB, UICornerFCSBtn, "FOV Color (Hue)", 445, 0, 0, 1, "FOVColor")
 
--- КНОПКИ ЦВЕТА (Сдвинуты вниз по координате Y)
+-- КНОПКИ ЦВЕТА (Сдвинуты ниже под новые ползунки)
 BgColorButton.Name = "BgColorButton"
 BgColorButton.Parent = ContentContainer
 BgColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-BgColorButton.Position = UDim2.new(0, 10, 0, 415)
+BgColorButton.Position = UDim2.new(0, 10, 0, 495)
 BgColorButton.Size = UDim2.new(0, 140, 0, 30)
 BgColorButton.Font = Enum.Font.SourceSansBold
 BgColorButton.Text = "BG COLOR"
@@ -235,7 +280,7 @@ UICornerBgBtn.Parent = BgColorButton
 TxtColorButton.Name = "TxtColorButton"
 TxtColorButton.Parent = ContentContainer
 TxtColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-TxtColorButton.Position = UDim2.new(0, 10, 0, 450)
+TxtColorButton.Position = UDim2.new(0, 10, 0, 530)
 TxtColorButton.Size = UDim2.new(0, 140, 0, 30)
 TxtColorButton.Font = Enum.Font.SourceSansBold
 TxtColorButton.Text = "TXT COLOR"
@@ -252,7 +297,6 @@ PaletteFrame.Size = UDim2.new(0, 110, 0, 140)
 PaletteFrame.Visible = false
 PaletteCorner.CornerRadius = UDim.new(0, 6)
 PaletteCorner.Parent = PaletteFrame
-
 UIGridLayout.Parent = PaletteFrame
 UIGridLayout.CellPadding = UDim2.new(0, 5, 0, 5)
 UIGridLayout.CellSize = UDim2.new(0, 30, 0, 30)
@@ -265,9 +309,7 @@ local PopularColors = {
     Color3.fromRGB(0, 255, 255), Color3.fromRGB(255, 0, 255), Color3.fromRGB(255, 165, 0),
     Color3.fromRGB(128, 0, 128), Color3.fromRGB(255, 192, 203), Color3.fromRGB(170, 255, 0)
 }
-
 local currentTargetMode = "None"
-
 for _, color in ipairs(PopularColors) do
     local ColorBtn = Instance.new("TextButton")
     ColorBtn.Text = ""
@@ -291,8 +333,13 @@ for _, color in ipairs(PopularColors) do
             RangeSliderLabel.TextColor3 = color
             DelaySliderLabel.TextColor3 = color
             SpeedSliderLabel.TextColor3 = color
+            FOVSizeSliderLabel.TextColor3 = color
+            FOVColorSliderLabel.TextColor3 = color
             BgColorButton.TextColor3 = color
             TxtColorButton.TextColor3 = color
+            -- Также красим круг FOV вместе с текстом
+            _G.AimFOVColor = color
+            FOVCircle.Color = color
         end
     end)
 end
@@ -304,7 +351,7 @@ BgColorButton.MouseButton1Click:Connect(function()
     else
         PaletteFrame.Visible = true
         currentTargetMode = "BG"
-        PaletteFrame.Position = UDim2.new(1, 10, 0, 260)
+        PaletteFrame.Position = UDim2.new(1, 10, 0, 340)
     end
 end)
 
@@ -315,7 +362,7 @@ TxtColorButton.MouseButton1Click:Connect(function()
     else
         PaletteFrame.Visible = true
         currentTargetMode = "TXT"
-        PaletteFrame.Position = UDim2.new(1, 10, 0, 290)
+        PaletteFrame.Position = UDim2.new(1, 10, 0, 370)
     end
 end)
 
@@ -446,7 +493,6 @@ RunService.Heartbeat:Connect(function()
     else
         if LocalPlayer.Character then
             local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            -- Возвращаем базовую скорость 16, если хак отключен
             if humanoid and humanoid.WalkSpeed ~= 16 then
                 humanoid.WalkSpeed = 16
             end
@@ -493,26 +539,44 @@ task.spawn(function()
     end
 end)
 
--- АИМБОТ И ЦЕЛИ
-local function GetClosestTarget()
+-- АИМБОТ С ПРОВЕРКОЙ НА КРУГ FOV (СТРОГО ПО ЦЕНТРУ ЭКРАНА)
+local function GetClosestTargetInFOV()
     local myRole = GetRole(LocalPlayer)
     local closestPlayer = nil
     local shortestDistance = math.huge
+    
+    -- Центр экрана
+    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local targetRole = GetRole(player)
             local validTarget = false
+            
             if myRole == "Murderer" and targetRole ~= "Murderer" then
                 validTarget = true
             elseif (myRole == "Sheriff" or myRole == "Innocent") and targetRole == "Murderer" then
                 validTarget = true
             end
+            
             local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
             if validTarget and humanoid and humanoid.Health > 0 then
-                local distance = (LocalPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-                if distance < shortestDistance then
-                    shortestDistance = distance
-                    closestPlayer = player
+                -- Конвертируем позицию врага в экранные координаты
+                local screenPos, onScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
+                
+                if onScreen then
+                    -- Расстояние от центра экрана до игрока на экране
+                    local fovDist = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
+                    
+                    -- Проверяем, находится ли враг внутри радиуса FOV
+                    if fovDist <= _G.AimFOVSize then
+                        -- Выбираем ближайшего по реальной 3D дистанции
+                        local distance = (LocalPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                        if distance < shortestDistance then
+                            shortestDistance = distance
+                            closestPlayer = player
+                        end
+                    end
                 end
             end
         end
@@ -531,10 +595,13 @@ local function IsHoldingWeapon()
     return false
 end
 
+-- Обновление позиции круга (строго по центру экрана, не следует за мышкой)
 RunService.RenderStepped:Connect(function()
+    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    
     if _G.SilentAimActive and IsHoldingWeapon() then
         if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
-            local target = GetClosestTarget()
+            local target = GetClosestTargetInFOV()
             if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
                 Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.HumanoidRootPart.Position)
             end
@@ -596,8 +663,10 @@ end)
 
 AimButton.MouseButton1Click:Connect(function()
     _G.SilentAimActive = not _G.SilentAimActive
-    AimButton.Text = _G.SilentAimActive and "AIM: ON" or "AIM: OFF"
+    AimButton.Text = _G.SilentAimActive and "AIM FOV: ON" or "AIM FOV: OFF"
     AimButton.BackgroundColor3 = _G.SilentAimActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
+    -- Включаем/выключаем визуальный круг на экране вместе с функцией аима
+    FOVCircle.Visible = _G.SilentAimActive
 end)
 
 NoclipButton.MouseButton1Click:Connect(function()
