@@ -1,6 +1,7 @@
 local ScreenGui = Instance.new("ScreenGui")
 local Frame = Instance.new("Frame")
 local UICornerFrame = Instance.new("UICorner")
+
 -- Кнопки функций
 local ChamsButton = Instance.new("TextButton")
 local UICornerChams = Instance.new("UICorner")
@@ -16,11 +17,13 @@ local UICornerPickup = Instance.new("UICorner")
 -- Элементы управления меню
 local HeaderLabel = Instance.new("TextLabel")
 local CollapseButton = Instance.new("TextButton")
+
 -- Кнопки кастомизации цвета
 local BgColorButton = Instance.new("TextButton")
 local UICornerBgBtn = Instance.new("UICorner")
 local TxtColorButton = Instance.new("TextButton")
 local UICornerTxtBtn = Instance.new("UICorner")
+
 -- Фрейм палитры
 local PaletteFrame = Instance.new("Frame")
 local UIGridLayout = Instance.new("UIGridLayout")
@@ -38,6 +41,7 @@ Frame.Size = UDim2.new(0, 160, 0, 375)
 Frame.Active = true
 Frame.Draggable = true
 Frame.ClipsDescendants = false
+
 UICornerFrame.CornerRadius = UDim.new(0, 8)
 UICornerFrame.Parent = Frame
 
@@ -137,6 +141,7 @@ local PopularColors = {
 }
 
 local currentTargetMode = "None"
+
 for _, color in ipairs(PopularColors) do
     local ColorBtn = Instance.new("TextButton")
     ColorBtn.Text = ""
@@ -307,11 +312,12 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- ИСПРАВЛЕННЫЙ АВТОПОДБОР ПИСТОЛЕТА С ФИКСАЦИЕЙ НА ПОЗИЦИИ
+-- ИСПРАВЛЕННЫЙ АВТОПОДБОР ПИСТОЛЕТА С ФИКСАЦИЕЙ НА ПОЗИЦИИ (С ПРОВЕРКОЙ НА МАРДЕРА)
 task.spawn(function()
     while true do
         task.wait(0.1)
-        if _G.AutoPickupActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        -- Добавлена проверка: подбор работает только если кнопка включена И ты НЕ Мардер
+        if _G.AutoPickupActive and GetRole(LocalPlayer) ~= "Murderer" and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
             local gunInstance = nil
             
             -- Сканируем окружение на наличие пистолета
