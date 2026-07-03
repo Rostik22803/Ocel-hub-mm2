@@ -13,9 +13,27 @@ local AntiFlingButton = Instance.new("TextButton")
 local UICornerFling = Instance.new("UICorner")
 local PickupButton = Instance.new("TextButton")
 local UICornerPickup = Instance.new("UICorner")
--- НОВАЯ КНОПКА: Киллаура
 local KillAuraButton = Instance.new("TextButton")
 local UICornerKillAura = Instance.new("UICorner")
+
+-- ЭЛЕМЕНТЫ ПОЛЗУНКОВ (SLIDERS)
+-- Ползунок Дистанции
+local RangeSliderFrame = Instance.new("Frame")
+local RangeSliderBar = Instance.new("Frame")
+local RangeSliderButton = Instance.new("TextButton")
+local RangeSliderLabel = Instance.new("TextLabel")
+local UICornerRSF = Instance.new("UICorner")
+local UICornerRSB = Instance.new("UICorner")
+local UICornerRSBtn = Instance.new("UICorner")
+
+-- Ползунок Задержки
+local DelaySliderFrame = Instance.new("Frame")
+local DelaySliderBar = Instance.new("Frame")
+local DelaySliderButton = Instance.new("TextButton")
+local DelaySliderLabel = Instance.new("TextLabel")
+local UICornerDSF = Instance.new("UICorner")
+local UICornerDSB = Instance.new("UICorner")
+local UICornerDSBtn = Instance.new("UICorner")
 
 -- Элементы управления меню
 local HeaderLabel = Instance.new("TextLabel")
@@ -36,8 +54,8 @@ ScreenGui.Name = "MM2_Ultimate_v5"
 ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
--- ГЛАВНОЕ МЕНЮ (Размер увеличен с 375 до 415, чтобы влезла новая кнопка)
-local MainFrameHeight = 415
+-- ГЛАВНОЕ МЕНЮ (Высота увеличена до 505, чтобы ползунки стояли просторно)
+local MainFrameHeight = 505
 Frame.Parent = ScreenGui
 Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Frame.Position = UDim2.new(0.05, 0, 0.1, 0)
@@ -97,13 +115,99 @@ ApplyButtonStyles(AimButton, UICornerAim, "AIM", 40)
 ApplyButtonStyles(NoclipButton, UICornerNoclip, "NOCLIP", 80)
 ApplyButtonStyles(AntiFlingButton, UICornerFling, "ANTI-FLING", 120)
 ApplyButtonStyles(PickupButton, UICornerPickup, "AUTOPICKUP", 160)
-ApplyButtonStyles(KillAuraButton, UICornerKillAura, "KILL AURA", 200) -- Новая кнопка
+ApplyButtonStyles(KillAuraButton, UICornerKillAura, "KILL AURA", 200)
 
--- КНОПКИ ЦВЕТА (Смещены вниз на 40 пикселей)
+-- НАСТРОЙКИ ФУНКЦИЙ ГЕЙМПЛЕЯ И ДЕФОЛТЫ СЛАЙДЕРОВ
+_G.ChamsActive = false
+_G.SilentAimActive = false
+_G.NoclipActive = false
+_G.AntiFlingActive = false
+_G.AutoPickupActive = false
+_G.KillAuraActive = false
+
+_G.KillAuraRange = 15     -- Старт дистанция
+_G.KillAuraDelay = 0.1    -- Старт задержка
+
+-- СТИЛИЗАЦИЯ ПОЛЗУНКОВ
+local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, btnCorner, text, yPos, currentVal, minVal, maxVal, isDecimal)
+    bgFrame.Parent = ContentContainer
+    bgFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    bgFrame.Position = UDim2.new(0, 10, 0, yPos)
+    bgFrame.Size = UDim2.new(0, 140, 0, 35)
+    bgCorner.CornerRadius = UDim.new(0, 6)
+    bgCorner.Parent = bgFrame
+
+    label.Parent = bgFrame
+    label.BackgroundTransparency = 1
+    label.Position = UDim2.new(0, 5, 0, 2)
+    label.Size = UDim2.new(1, -10, 0, 14)
+    label.Font = Enum.Font.SourceSansBold
+    label.Text = text .. ": " .. tostring(currentVal)
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextSize = 11
+    label.TextXAlignment = Enum.TextXAlignment.Left
+
+    barFrame.Parent = bgFrame
+    barFrame.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    barFrame.Position = UDim2.new(0, 8, 0, 20)
+    barFrame.Size = UDim2.new(0, 124, 0, 6)
+    barCorner.CornerRadius = UDim.new(0, 3)
+    barCorner.Parent = barFrame
+
+    btn.Parent = barFrame
+    local startPercent = (currentVal - minVal) / (maxVal - minVal)
+    btn.Position = UDim2.new(startPercent, -5, 0.5, -5)
+    btn.Size = UDim2.new(0, 10, 0, 10)
+    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Text = ""
+    btnCorner.CornerRadius = UDim.new(1, 0)
+    btnCorner.Parent = btn
+
+    -- Логика перетаскивания ползунка
+    local UserInputService = game:GetService("UserInputService")
+    local dragging = false
+
+    btn.MouseButton1Down:Connect(function()
+        dragging = true
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local barAbsolutePos = barFrame.AbsolutePosition.X
+            local barAbsoluteSize = barFrame.AbsoluteSize.X
+            local mouseX = input.Position.X
+            local relativeX = math.clamp((mouseX - barAbsolutePos) / barAbsoluteSize, 0, 1)
+            
+            btn.Position = UDim2.new(relativeX, -5, 0.5, -5)
+            
+            local val = minVal + (relativeX * (maxVal - minVal))
+            if isDecimal then
+                val = math.round(val * 100) / 100 -- 2 знака после запятой для задержки
+                _G.KillAuraDelay = val
+            else
+                val = math.round(val) -- Целые числа для дистанции
+                _G.KillAuraRange = val
+            end
+            label.Text = text .. ": " .. tostring(val)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+end
+
+-- Инициализируем ползунки (Range: 5-50, Delay: 0.01-0.5)
+CreateSlider(RangeSliderFrame, RangeSliderBar, RangeSliderButton, RangeSliderLabel, UICornerRSF, UICornerRSB, UICornerRSBtn, "Range (Distance)", 240, _G.KillAuraRange, 5, 50, false)
+CreateSlider(DelaySliderFrame, DelaySliderBar, DelaySliderButton, DelaySliderLabel, UICornerDSF, UICornerDSB, UICornerDSBtn, "Attack Delay (Sec)", 280, _G.KillAuraDelay, 0.01, 0.5, true)
+
+-- КНОПКИ ЦВЕТА
 BgColorButton.Name = "BgColorButton"
 BgColorButton.Parent = ContentContainer
 BgColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-BgColorButton.Position = UDim2.new(0, 10, 0, 250)
+BgColorButton.Position = UDim2.new(0, 10, 0, 330)
 BgColorButton.Size = UDim2.new(0, 140, 0, 30)
 BgColorButton.Font = Enum.Font.SourceSansBold
 BgColorButton.Text = "BG COLOR"
@@ -115,7 +219,7 @@ UICornerBgBtn.Parent = BgColorButton
 TxtColorButton.Name = "TxtColorButton"
 TxtColorButton.Parent = ContentContainer
 TxtColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-TxtColorButton.Position = UDim2.new(0, 10, 0, 285)
+TxtColorButton.Position = UDim2.new(0, 10, 0, 365)
 TxtColorButton.Size = UDim2.new(0, 140, 0, 30)
 TxtColorButton.Font = Enum.Font.SourceSansBold
 TxtColorButton.Text = "TXT COLOR"
@@ -164,6 +268,8 @@ for _, color in ipairs(PopularColors) do
             AntiFlingButton.TextColor3 = color
             PickupButton.TextColor3 = color
             KillAuraButton.TextColor3 = color
+            RangeSliderLabel.TextColor3 = color
+            DelaySliderLabel.TextColor3 = color
             BgColorButton.TextColor3 = color
             TxtColorButton.TextColor3 = color
         end
@@ -177,7 +283,7 @@ BgColorButton.MouseButton1Click:Connect(function()
     else
         PaletteFrame.Visible = true
         currentTargetMode = "BG"
-        PaletteFrame.Position = UDim2.new(1, 10, 0, 180)
+        PaletteFrame.Position = UDim2.new(1, 10, 0, 260)
     end
 end)
 
@@ -188,7 +294,7 @@ TxtColorButton.MouseButton1Click:Connect(function()
     else
         PaletteFrame.Visible = true
         currentTargetMode = "TXT"
-        PaletteFrame.Position = UDim2.new(1, 10, 0, 210)
+        PaletteFrame.Position = UDim2.new(1, 10, 0, 290)
     end
 end)
 
@@ -208,18 +314,6 @@ CollapseButton.MouseButton1Click:Connect(function()
         CollapseButton.Text = "-"
     end
 end)
-
--- НАСТРОЙКИ ФУНКЦИЙ ГЕЙМПЛЕЯ
-_G.ChamsActive = false
-_G.SilentAimActive = false
-_G.NoclipActive = false
-_G.AntiFlingActive = false
-_G.AutoPickupActive = false
-_G.KillAuraActive = false -- Статус киллауры
-
--- НАСТРОЙКИ КИЛЛАУРЫ (Можно менять под себя прямо здесь)
-_G.KillAuraRange = 15     -- Радиус действия (в студах)
-_G.KillAuraDelay = 0.1    -- Задержка между ударами (в секундах)
 
 local Colors = {
     Murderer = Color3.fromRGB(255, 0, 0),
@@ -321,7 +415,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- ИСПРАВЛЕННЫЙ АВТОПОДБОР ПИСТОЛЕТА
+-- ИСПРАВЛЕННЫЙ АВТОПОДБОР ПИСТОЛЕТА (Ссылка из файла auto-pickup fix.docx соблюдена)
 task.spawn(function()
     while true do
         task.wait(0.1)
@@ -409,33 +503,28 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ЛОГИКА РАБОТЫ КИЛЛАУРЫ
+-- ДИНАМИЧЕСКАЯ КИЛЛАУРА ЧИТАЮЩАЯ ДАННЫЕ ИЗ ПОЛЗУНКОВ
 task.spawn(function()
     while true do
-        task.wait(_G.KillAuraDelay) -- Задержка между проверками/атаками
+        task.wait(_G.KillAuraDelay)
         
-        -- Условия: Включена киллаура + мы Мардер + живы
         if _G.KillAuraActive and GetRole(LocalPlayer) == "Murderer" and LocalPlayer.Character then
             local knife = LocalPlayer.Character:FindFirstChild("Knife") or LocalPlayer.Backpack:FindFirstChild("Knife")
             
             if knife then
-                -- Автоматически берем нож в руки, если он в рюкзаке
                 if knife.Parent == LocalPlayer.Backpack then
                     knife.Parent = LocalPlayer.Character
                 end
                 
                 local myHrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
                 if myHrp then
-                    -- Ищем ближайшую жертву в радиусе
                     for _, player in ipairs(Players:GetPlayers()) do
                         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                             local targetHrp = player.Character.HumanoidRootPart
                             local distance = (myHrp.Position - targetHrp.Position).Magnitude
                             local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
                             
-                            -- Если игрок в зоне действия и он жив
                             if distance <= _G.KillAuraRange and humanoid and humanoid.Health > 0 then
-                                -- Имитируем удар ножом по хитбоксу игрока
                                 firetouchinsert(knife:FindFirstChild("Handle"), targetHrp, 1)
                                 firetouchinsert(knife:FindFirstChild("Handle"), targetHrp, 0)
                             end
@@ -481,7 +570,6 @@ PickupButton.MouseButton1Click:Connect(function()
     PickupButton.BackgroundColor3 = _G.AutoPickupActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
 end)
 
--- Нажатие кнопки KILL AURA
 KillAuraButton.MouseButton1Click:Connect(function()
     _G.KillAuraActive = not _G.KillAuraActive
     KillAuraButton.Text = _G.KillAuraActive and "KILL AURA: ON" or "KILL AURA: OFF"
