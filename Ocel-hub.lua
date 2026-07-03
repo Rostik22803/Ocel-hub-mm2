@@ -1,3 +1,4 @@
+
 local ScreenGui = Instance.new("ScreenGui")
 local Frame = Instance.new("Frame")
 local UICornerFrame = Instance.new("UICorner")
@@ -15,9 +16,10 @@ local PickupButton = Instance.new("TextButton")
 local UICornerPickup = Instance.new("UICorner")
 local KillAuraButton = Instance.new("TextButton")
 local UICornerKillAura = Instance.new("UICorner")
+local SpeedButton = Instance.new("TextButton")
+local UICornerSpeed = Instance.new("UICorner")
 
 -- ЭЛЕМЕНТЫ ПОЛЗУНКОВ (SLIDERS)
--- Ползунок Дистанции
 local RangeSliderFrame = Instance.new("Frame")
 local RangeSliderBar = Instance.new("Frame")
 local RangeSliderButton = Instance.new("TextButton")
@@ -26,7 +28,6 @@ local UICornerRSF = Instance.new("UICorner")
 local UICornerRSB = Instance.new("UICorner")
 local UICornerRSBtn = Instance.new("UICorner")
 
--- Ползунок Задержки
 local DelaySliderFrame = Instance.new("Frame")
 local DelaySliderBar = Instance.new("Frame")
 local DelaySliderButton = Instance.new("TextButton")
@@ -45,7 +46,7 @@ local UICornerBgBtn = Instance.new("UICorner")
 local TxtColorButton = Instance.new("TextButton")
 local UICornerTxtBtn = Instance.new("UICorner")
 
--- Фрейм палитиры
+-- Фрейм палитры
 local PaletteFrame = Instance.new("Frame")
 local UIGridLayout = Instance.new("UIGridLayout")
 local PaletteCorner = Instance.new("UICorner")
@@ -54,8 +55,8 @@ ScreenGui.Name = "MM2_Ultimate_v5"
 ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
--- ГЛАВНОЕ МЕНЮ
-local MainFrameHeight = 505
+-- ГЛАВНОЕ МЕНЮ (Высота увеличена для новой кнопки)
+local MainFrameHeight = 545
 Frame.Parent = ScreenGui
 Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Frame.Position = UDim2.new(0.05, 0, 0.1, 0)
@@ -116,6 +117,7 @@ ApplyButtonStyles(NoclipButton, UICornerNoclip, "NOCLIP", 80)
 ApplyButtonStyles(AntiFlingButton, UICornerFling, "ANTI-FLING", 120)
 ApplyButtonStyles(PickupButton, UICornerPickup, "AUTOPICKUP", 160)
 ApplyButtonStyles(KillAuraButton, UICornerKillAura, "KILL AURA", 200)
+ApplyButtonStyles(SpeedButton, UICornerSpeed, "SPEEDHACK", 240) -- Добавлена кнопка спидхака
 
 -- НАСТРОЙКИ ФУНКЦИЙ ГЕЙМПЛЕЯ И ДЕФОЛТЫ
 _G.ChamsActive = false
@@ -124,7 +126,8 @@ _G.NoclipActive = false
 _G.AntiFlingActive = false
 _G.AutoPickupActive = false
 _G.KillAuraActive = false
-
+_G.SpeedActive = false
+_G.SpeedValue = 40 -- Скорость бега при спидхаке
 _G.KillAuraRange = 15     
 _G.KillAuraDelay = 0.1    
 
@@ -136,7 +139,7 @@ local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, 
     bgFrame.Size = UDim2.new(0, 140, 0, 35)
     bgCorner.CornerRadius = UDim.new(0, 6)
     bgCorner.Parent = bgFrame
-
+    
     label.Parent = bgFrame
     label.BackgroundTransparency = 1
     label.Position = UDim2.new(0, 5, 0, 2)
@@ -146,14 +149,14 @@ local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, 
     label.TextColor3 = Color3.fromRGB(255, 255, 255)
     label.TextSize = 11
     label.TextXAlignment = Enum.TextXAlignment.Left
-
+    
     barFrame.Parent = bgFrame
     barFrame.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
     barFrame.Position = UDim2.new(0, 8, 0, 20)
     barFrame.Size = UDim2.new(0, 124, 0, 6)
     barCorner.CornerRadius = UDim.new(0, 3)
     barCorner.Parent = barFrame
-
+    
     btn.Parent = barFrame
     local startPercent = (currentVal - minVal) / (maxVal - minVal)
     btn.Position = UDim2.new(startPercent, -5, 0.5, -5)
@@ -162,9 +165,8 @@ local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, 
     btn.Text = ""
     btnCorner.CornerRadius = UDim.new(1, 0)
     btnCorner.Parent = btn
-
+    
     local dragging = false
-
     local function UpdateSliderPosition(inputX)
         local barAbsolutePos = barFrame.AbsolutePosition.X
         local barAbsoluteSize = barFrame.AbsoluteSize.X
@@ -182,19 +184,17 @@ local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, 
         end
         label.Text = text .. ": " .. tostring(val)
     end
-
+    
     btn.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
         end
     end)
-
     game:GetService("UserInputService").InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
         end
     end)
-
     game:GetService("UserInputService").InputChanged:Connect(function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             UpdateSliderPosition(input.Position.X)
@@ -202,15 +202,15 @@ local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, 
     end)
 end
 
--- Инициализация ползунков
-CreateSlider(RangeSliderFrame, RangeSliderBar, RangeSliderButton, RangeSliderLabel, UICornerRSF, UICornerRSB, UICornerRSBtn, "Range (Distance)", 240, _G.KillAuraRange, 5, 50, false)
-CreateSlider(DelaySliderFrame, DelaySliderBar, DelaySliderButton, DelaySliderLabel, UICornerDSF, UICornerDSB, UICornerDSBtn, "Attack Delay (Sec)", 280, _G.KillAuraDelay, 0.01, 0.5, true)
+-- Инициализация ползунков (сдвинуты вниз из-за кнопки Speedhack)
+CreateSlider(RangeSliderFrame, RangeSliderBar, RangeSliderButton, RangeSliderLabel, UICornerRSF, UICornerRSB, UICornerRSBtn, "Range (Distance)", 285, _G.KillAuraRange, 5, 50, false)
+CreateSlider(DelaySliderFrame, DelaySliderBar, DelaySliderButton, DelaySliderLabel, UICornerDSF, UICornerDSB, UICornerDSBtn, "Attack Delay (Sec)", 325, _G.KillAuraDelay, 0.01, 0.5, true)
 
 -- КНОПКИ ЦВЕТА
 BgColorButton.Name = "BgColorButton"
 BgColorButton.Parent = ContentContainer
 BgColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-BgColorButton.Position = UDim2.new(0, 10, 0, 330)
+BgColorButton.Position = UDim2.new(0, 10, 0, 375)
 BgColorButton.Size = UDim2.new(0, 140, 0, 30)
 BgColorButton.Font = Enum.Font.SourceSansBold
 BgColorButton.Text = "BG COLOR"
@@ -222,7 +222,7 @@ UICornerBgBtn.Parent = BgColorButton
 TxtColorButton.Name = "TxtColorButton"
 TxtColorButton.Parent = ContentContainer
 TxtColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-TxtColorButton.Position = UDim2.new(0, 10, 0, 365)
+TxtColorButton.Position = UDim2.new(0, 10, 0, 410)
 TxtColorButton.Size = UDim2.new(0, 140, 0, 30)
 TxtColorButton.Font = Enum.Font.SourceSansBold
 TxtColorButton.Text = "TXT COLOR"
@@ -252,6 +252,7 @@ local PopularColors = {
     Color3.fromRGB(128, 0, 128), Color3.fromRGB(255, 192, 203), Color3.fromRGB(170, 255, 0)
 }
 local currentTargetMode = "None"
+
 for _, color in ipairs(PopularColors) do
     local ColorBtn = Instance.new("TextButton")
     ColorBtn.Text = ""
@@ -271,6 +272,7 @@ for _, color in ipairs(PopularColors) do
             AntiFlingButton.TextColor3 = color
             PickupButton.TextColor3 = color
             KillAuraButton.TextColor3 = color
+            SpeedButton.TextColor3 = color
             RangeSliderLabel.TextColor3 = color
             DelaySliderLabel.TextColor3 = color
             BgColorButton.TextColor3 = color
@@ -418,7 +420,24 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- ИСПРАВЛЕННЫЙ АВТОПОДБОР ПИСТОЛЕТА (auto-pickup fix.docx)
+-- ПОТОК SPEEDHACK
+RunService.Heartbeat:Connect(function()
+    if _G.SpeedActive and LocalPlayer.Character then
+        local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = _G.SpeedValue
+        end
+    else
+        if LocalPlayer.Character then
+            local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid and humanoid.WalkSpeed == _G.SpeedValue then
+                humanoid.WalkSpeed = 16 -- Стандартная скорость Roblox
+            end
+        end
+    end
+end)
+
+-- АВТОПОДБОР ПИСТОЛЕТА
 task.spawn(function()
     while true do
         task.wait(0.1)
@@ -506,7 +525,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ДИНАМИЧЕСКАЯ КИЛЛАУРА С ОБНОВЛЕНИЕМ ИЗ ПОЛЗУНКОВ
+-- РАБОЧАЯ КИЛЛАУРА ЧЕРЕЗ ИВЕНТ ММ2
 task.spawn(function()
     while true do
         task.wait(_G.KillAuraDelay)
@@ -528,6 +547,10 @@ task.spawn(function()
                             local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
                             
                             if distance <= _G.KillAuraRange and humanoid and humanoid.Health > 0 then
+                                -- Вызов родного серверного репликатора урона MM2 для 100% срабатывания
+                                if knife:FindFirstChild("Stab") then
+                                    knife.Stab:FireServer(global_range_check and 1 or 0)
+                                end
                                 firetouchinsert(knife:FindFirstChild("Handle"), targetHrp, 1)
                                 firetouchinsert(knife:FindFirstChild("Handle"), targetHrp, 0)
                             end
@@ -577,4 +600,10 @@ KillAuraButton.MouseButton1Click:Connect(function()
     _G.KillAuraActive = not _G.KillAuraActive
     KillAuraButton.Text = _G.KillAuraActive and "KILL AURA: ON" or "KILL AURA: OFF"
     KillAuraButton.BackgroundColor3 = _G.KillAuraActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
+end)
+
+SpeedButton.MouseButton1Click:Connect(function()
+    _G.SpeedActive = not _G.SpeedActive
+    SpeedButton.Text = _G.SpeedActive and "SPEEDHACK: ON" or "SPEEDHACK: OFF"
+    SpeedButton.BackgroundColor3 = _G.SpeedActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
 end)
