@@ -14,23 +14,30 @@ local UICornerTimer = Instance.new("UICorner")
 local ColorPaletteButton = Instance.new("TextButton")
 local UICornerPalette = Instance.new("UICorner")
 
+-- Палитра и Отдельное Окно Таймера
+local PaletteFrame = Instance.new("Frame")
+local UIGridLayout = Instance.new("UIGridLayout")
+local TimerWindow = Instance.new("Frame")
+local TimerTextLabel = Instance.new("TextLabel")
+local TimerWindowCorner = Instance.new("UICorner")
+
 ScreenGui.Name = "MM2_Ultimate_v3"
 ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
--- Увеличили размер Frame, чтобы всё поместилось
+-- ГЛАВНОЕ МЕНЮ
 Frame.Parent = ScreenGui
 Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Frame.Position = UDim2.new(0.05, 0, 0.1, 0)
-Frame.Size = UDim2.new(0, 160, 0, 240) -- Высота увеличена со 110 до 240
+Frame.Size = UDim2.new(0, 160, 0, 190) 
 Frame.Active = true
 Frame.Draggable = true
-Frame.ClipsDescendants = true
+Frame.ClipsDescendants = false
 
 UICornerFrame.CornerRadius = UDim.new(0, 8)
 UICornerFrame.Parent = Frame
 
--- НАДПИСЬ OCEL-HUB (Заголовок)
+-- НАДПИСЬ OCEL-HUB (Видна всегда)
 HeaderLabel.Name = "HeaderLabel"
 HeaderLabel.Parent = Frame
 HeaderLabel.BackgroundTransparency = 1
@@ -38,7 +45,7 @@ HeaderLabel.Position = UDim2.new(0, 10, 0, 5)
 HeaderLabel.Size = UDim2.new(0, 110, 0, 25)
 HeaderLabel.Font = Enum.Font.SourceSansBold
 HeaderLabel.Text = "Ocel-hub"
-HeaderLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- Начальный белый
+HeaderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 HeaderLabel.TextSize = 18
 HeaderLabel.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -53,11 +60,17 @@ CollapseButton.Text = "-"
 CollapseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 CollapseButton.TextSize = 20
 
--- Сдвигаем старые кнопки ниже из-за заголовка
+-- ОСТАЛЬНЫЕ КНОПКИ (Упакованы в контейнер для легкого скрытия)
+local ContentContainer = Instance.new("Frame")
+ContentContainer.Parent = Frame
+ContentContainer.BackgroundTransparency = 1
+ContentContainer.Position = UDim2.new(0, 0, 0, 35)
+ContentContainer.Size = UDim2.new(1, 0, 1, -35)
+
 ChamsButton.Name = "ChamsButton"
-ChamsButton.Parent = Frame
+ChamsButton.Parent = ContentContainer
 ChamsButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-ChamsButton.Position = UDim2.new(0, 10, 0, 35)
+ChamsButton.Position = UDim2.new(0, 10, 0, 0)
 ChamsButton.Size = UDim2.new(0, 140, 0, 40)
 ChamsButton.Font = Enum.Font.SourceSansBold
 ChamsButton.Text = "CHAMS: OFF"
@@ -68,9 +81,9 @@ UICornerChams.CornerRadius = UDim.new(0, 6)
 UICornerChams.Parent = ChamsButton
 
 AimButton.Name = "AimButton"
-AimButton.Parent = Frame
+AimButton.Parent = ContentContainer
 AimButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-AimButton.Position = UDim2.new(0, 10, 0, 85)
+AimButton.Position = UDim2.new(0, 10, 0, 50)
 AimButton.Size = UDim2.new(0, 140, 0, 40)
 AimButton.Font = Enum.Font.SourceSansBold
 AimButton.Text = "AIM: OFF"
@@ -80,12 +93,12 @@ AimButton.TextSize = 16
 UICornerAim.CornerRadius = UDim.new(0, 6)
 UICornerAim.Parent = AimButton
 
--- КНОПКА ТАЙМЕРА
+-- КНОПКА ВКЛЮЧЕНИЯ ТАЙМЕРА
 TimerButton.Name = "TimerButton"
-TimerButton.Parent = Frame
+TimerButton.Parent = ContentContainer
 TimerButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-TimerButton.Position = UDim2.new(0, 10, 0, 135)
-TimerButton.Size = UDim2.new(0, 100, 0, 40) -- Меньше по ширине, чтобы влезла палитра
+TimerButton.Position = UDim2.new(0, 10, 0, 100)
+TimerButton.Size = UDim2.new(0, 100, 0, 40)
 TimerButton.Font = Enum.Font.SourceSansBold
 TimerButton.Text = "TIMER: OFF"
 TimerButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -94,11 +107,11 @@ TimerButton.TextSize = 14
 UICornerTimer.CornerRadius = UDim.new(0, 6)
 UICornerTimer.Parent = TimerButton
 
--- КНОПКА ПАЛИТРЫ ЦВЕТОВ
+-- КНОПКА ВЫЗОВА ПАЛИТРЫ
 ColorPaletteButton.Name = "ColorPaletteButton"
-ColorPaletteButton.Parent = Frame
+ColorPaletteButton.Parent = ContentContainer
 ColorPaletteButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-ColorPaletteButton.Position = UDim2.new(0, 115, 0, 135)
+ColorPaletteButton.Position = UDim2.new(0, 115, 0, 100)
 ColorPaletteButton.Size = UDim2.new(0, 35, 0, 40)
 ColorPaletteButton.Font = Enum.Font.SourceSansBold
 ColorPaletteButton.Text = "🎨"
@@ -108,61 +121,115 @@ ColorPaletteButton.TextSize = 18
 UICornerPalette.CornerRadius = UDim.new(0, 6)
 UICornerPalette.Parent = ColorPaletteButton
 
+-- СЕТКА ПАЛИТРЫ ЦВЕТОВ (12 Самых популярных оттенков)
+PaletteFrame.Name = "PaletteFrame"
+PaletteFrame.Parent = ContentContainer
+PaletteFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+PaletteFrame.Position = UDim2.new(1, 10, 0, 0)
+PaletteFrame.Size = UDim2.new(0, 110, 0, 140)
+PaletteFrame.Visible = false
+local PaletteCorner = Instance.new("UICorner", PaletteFrame)
+PaletteCorner.CornerRadius = UDim.new(0, 6)
+
+UIGridLayout.Parent = PaletteFrame
+UIGridLayout.CellPadding = UDim2.new(0, 5, 0, 5)
+UIGridLayout.CellSize = UDim2.new(0, 30, 0, 30)
+UIGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIGridLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+
+local PopularColors = {
+    Color3.fromRGB(255, 255, 255), -- Белый
+    Color3.fromRGB(255, 0, 0),     -- Красный
+    Color3.fromRGB(0, 255, 0),     -- Зеленый
+    Color3.fromRGB(0, 0, 255),     -- Синий
+    Color3.fromRGB(255, 255, 0),   -- Желтый
+    Color3.fromRGB(0, 255, 255),   -- Циан
+    Color3.fromRGB(255, 0, 255),   -- Маджента
+    Color3.fromRGB(255, 165, 0),   -- Оранжевый
+    Color3.fromRGB(128, 0, 128),   -- Фиолетовый
+    Color3.fromRGB(255, 192, 203), -- Розовый
+    Color3.fromRGB(0, 255, 128),   -- Мятный
+    Color3.fromRGB(170, 255, 0)    -- Лайм
+}
+
+-- ОТДЕЛЬНОЕ ОКНО ТАЙМЕРА
+TimerWindow.Name = "MM2_TimerWindow"
+TimerWindow.Parent = ScreenGui
+TimerWindow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+TimerWindow.Position = UDim2.new(0.05, 0, 0.35, 0)
+TimerWindow.Size = UDim2.new(0, 120, 0, 45)
+TimerWindow.Active = true
+TimerWindow.Draggable = true
+TimerWindow.Visible = false
+
+TimerWindowCorner.CornerRadius = UDim.new(0, 8)
+TimerWindowCorner.Parent = TimerWindow
+
+TimerTextLabel.Parent = TimerWindow
+TimerTextLabel.BackgroundTransparency = 1
+TimerTextLabel.Size = UDim2.new(1, 0, 1, 0)
+TimerTextLabel.Font = Enum.Font.SourceSansBold
+TimerTextLabel.Text = "00:00"
+TimerTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TimerTextLabel.TextSize = 22
+
+-- Логика применения цветов из палитры
+for _, color in ipairs(PopularColors) do
+    local ColorBtn = Instance.new("TextButton")
+    ColorBtn.Text = ""
+    ColorBtn.BackgroundColor3 = color
+    ColorBtn.Parent = PaletteFrame
+    Instance.new("UICorner", ColorBtn).CornerRadius = UDim.new(0, 4)
+    
+    ColorBtn.MouseButton1Click:Connect(function()
+        HeaderLabel.TextColor3 = color
+        TimerTextLabel.TextColor3 = color
+    end)
+end
+
+ColorPaletteButton.MouseButton1Click:Connect(function()
+    PaletteFrame.Visible = not PaletteFrame.Visible
+end)
+
 -- Логика Сворачивания / Разворачивания меню
 local MenuCollapsed = false
 CollapseButton.MouseButton1Click:Connect(function()
     MenuCollapsed = not MenuCollapsed
     if MenuCollapsed then
-        Frame:TweenSize(UDim2.new(0, 160, 0, 35), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.3, true)
+        ContentContainer.Visible = false
+        PaletteFrame.Visible = false
+        Frame:TweenSize(UDim2.new(0, 160, 0, 35), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
         CollapseButton.Text = "+"
     else
-        Frame:TweenSize(UDim2.new(0, 160, 0, 190), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.3, true)
+        Frame:TweenSize(UDim2.new(0, 160, 0, 190), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+        task.wait(0.1)
+        ContentContainer.Visible = true
         CollapseButton.Text = "-"
     end
 end)
 
--- Логика Смены Цветов (Палитра)
-local TextColors = {
-    Color3.fromRGB(255, 255, 255), -- Белый
-    Color3.fromRGB(0, 255, 255),   -- Циан (Голубой)
-    Color3.fromRGB(255, 255, 0),   -- Желтый
-    Color3.fromRGB(255, 105, 180), -- Розовый
-    Color3.fromRGB(170, 85, 255)   -- Фиолетовый
-}
-local currentColorIndex = 1
-
-ColorPaletteButton.MouseButton1Click:Connect(function()
-    currentColorIndex = currentColorIndex + 1
-    if currentColorIndex > #TextColors then
-        currentColorIndex = 1
-    end
-    local newColor = TextColors[currentColorIndex]
-    
-    -- Меняем цвета текста у таймера и заголовка
-    TimerButton.TextColor3 = newColor
-    HeaderLabel.TextColor3 = newColor
-end)
-
--- Логика работы таймера
+-- РЕАЛЬНЫЙ ТАЙМЕР РАУНДА MM2
 local TimerActive = false
 local timerCoroutine = nil
 
 local function FormatTime(seconds)
+    if not seconds or seconds <= 0 then return "00:00" end
     local mins = math.floor(seconds / 60)
-    local secs = seconds % 60
+    local secs = math.floor(seconds % 60)
     return string.format("%02d:%02d", mins, secs)
 end
 
--- Попытка найти реальное время раунда в MM2
 local function GetMM2Time()
     local repl = game:GetService("ReplicatedStorage")
-    -- В разных версиях MM2 значение может лежать в разных местах:
-    local remotes = repl:FindFirstChild("Remotes")
-    local gameplay = remotes and remotes:FindFirstChild("Gameplay")
-    local roundTimer = gameplay and gameplay:FindFirstChild("RoundTimer") or repl:FindFirstChild("TimerToClose") or repl:FindFirstChild("RoundTimer")
+    -- Проверка стандартных путей хранения таймера в оригинальном Murder Mystery 2
+    local roundTimer = repl:FindFirstChild("TimerToClose") or repl:FindFirstChild("RoundTimer")
+    if not roundTimer and repl:FindFirstChild("Remotes") then
+        local gameplay = repl.Remotes:FindFirstChild("Gameplay")
+        if gameplay then roundTimer = gameplay:FindFirstChild("RoundTimer") end
+    end
     
     if roundTimer and (roundTimer:IsA("IntValue") or roundTimer:IsA("NumberValue") or roundTimer:IsA("StringValue")) then
-        return tonumber(roundTimer.Value) or 0
+        return tonumber(roundTimer.Value)
     end
     return nil
 end
@@ -171,19 +238,18 @@ TimerButton.MouseButton1Click:Connect(function()
     TimerActive = not TimerActive
     if TimerActive then
         TimerButton.BackgroundColor3 = Color3.fromRGB(60, 255, 60)
+        TimerButton.Text = "TIMER: ON"
+        TimerWindow.Visible = true
         
-        -- Запуск цикла обновления времени
         timerCoroutine = task.spawn(function()
-            local fakeTimer = 180 -- Фейк таймер на 3 минуты, если реальный не найден в структурах
             while TimerActive do
-                local realTime = GetMM2Time()
-                if realTime then
-                    TimerButton.Text = "TIME: " .. FormatTime(realTime)
+                local serverTime = GetMM2Time()
+                if serverTime then
+                    TimerTextLabel.Text = FormatTime(serverTime)
                 else
-                    TimerButton.Text = FormatTime(fakeTimer)
-                    if fakeTimer > 0 then fakeTimer = fakeTimer - 1 else fakeTimer = 180 end
+                    TimerTextLabel.Text = "Lobby / --:--"
                 end
-                task.wait(1)
+                task.wait(0.5) -- Оптимальное обновление полсекунды
             end
         end)
     else
@@ -191,10 +257,11 @@ TimerButton.MouseButton1Click:Connect(function()
         if timerCoroutine then task.cancel(timerCoroutine) end
         TimerButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
         TimerButton.Text = "TIMER: OFF"
+        TimerWindow.Visible = false
     end
 end)
 
--- [Оригинальный код логики Чамсов и Аимбота оставлен без изменений]
+-- [Оригинальная логика Чамсов и Аимбота сохранена полностью]
 _G.ChamsActive = false
 _G.SilentAimActive = false
 local Colors = {
