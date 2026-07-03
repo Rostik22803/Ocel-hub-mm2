@@ -446,7 +446,7 @@ end
 task.spawn(function()
     while true do
         task.wait(0.3)
-        if _G.ChActive then
+        if _G.ChamsActive then
             for _, player in ipairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer and player.Character then
                     local role = GetRole(player)
@@ -558,7 +558,6 @@ local function GetClosestTarget()
     local closestPlayer = nil
     local shortestDistance = math.huge
     
-    -- Получаем строгий центр экрана
     local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
     for _, player in ipairs(Players:GetPlayers()) do
@@ -577,10 +576,8 @@ local function GetClosestTarget()
                 local screenPos, onScreen = Camera:WorldToViewportPoint(targetHrp.Position)
                 
                 if onScreen then
-                    -- Дистанция на экране считается от геометрического центра экрана
                     local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
                     
-                    -- Проверка попадания в FOV
                     if screenDist <= _G.AimFOVRadius then
                         local distance = (LocalPlayer.Character.HumanoidRootPart.Position - targetHrp.Position).Magnitude
                         if distance < shortestDistance then
@@ -608,7 +605,6 @@ end
 
 -- Обновление позиции FOV круга и Аима
 RunService.RenderStepped:Connect(function()
-    -- Центрируем FOV круг строго посередине экрана
     if _G.FOVShowActive then
         FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
         FOVCircle.Radius = _G.AimFOVRadius
