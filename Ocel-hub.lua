@@ -35,6 +35,15 @@ local UICornerDSF = Instance.new("UICorner")
 local UICornerDSB = Instance.new("UICorner")
 local UICornerDSBtn = Instance.new("UICorner")
 
+-- Новый ползунок для Спидхака
+local SpeedSliderFrame = Instance.new("Frame")
+local SpeedSliderBar = Instance.new("Frame")
+local SpeedSliderButton = Instance.new("TextButton")
+local SpeedSliderLabel = Instance.new("TextLabel")
+local UICornerSSF = Instance.new("UICorner")
+local UICornerSSB = Instance.new("UICorner")
+local UICornerSSBtn = Instance.new("UICorner")
+
 -- Элементы управления меню
 local HeaderLabel = Instance.new("TextLabel")
 local CollapseButton = Instance.new("TextButton")
@@ -54,8 +63,8 @@ ScreenGui.Name = "MM2_Ultimate_v5"
 ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
--- ГЛАВНОЕ МЕНЮ
-local MainFrameHeight = 545
+-- ГЛАВНОЕ МЕНЮ (Высота увеличена для размещения нового ползунка)
+local MainFrameHeight = 585
 Frame.Parent = ScreenGui
 Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Frame.Position = UDim2.new(0.05, 0, 0.1, 0)
@@ -126,12 +135,13 @@ _G.AntiFlingActive = false
 _G.AutoPickupActive = false
 _G.KillAuraActive = false
 _G.SpeedActive = false
-_G.SpeedValue = 40 -- Настройка на основе конфигурации из спидхак.docx
+
+_G.SpeedValue = 40        -- Скорость по умолчанию
 _G.KillAuraRange = 15     
 _G.KillAuraDelay = 0.1    
 
 -- ФУНКЦИЯ СОЗДАНИЯ И СТАБИЛИЗАЦИИ ПОЛЗУНКОВ
-local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, btnCorner, text, yPos, currentVal, minVal, maxVal, isDecimal)
+local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, btnCorner, text, yPos, currentVal, minVal, maxVal, sliderType)
     bgFrame.Parent = ContentContainer
     bgFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     bgFrame.Position = UDim2.new(0, 10, 0, yPos)
@@ -174,9 +184,12 @@ local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, 
         btn.Position = UDim2.new(relativeX, -5, 0.5, -5)
         
         local val = minVal + (relativeX * (maxVal - minVal))
-        if isDecimal then
+        if sliderType == "Decimal" then
             val = math.round(val * 100) / 100
             _G.KillAuraDelay = val
+        elseif sliderType == "Speed" then
+            val = math.round(val)
+            _G.SpeedValue = val
         else
             val = math.round(val)
             _G.KillAuraRange = val
@@ -201,15 +214,16 @@ local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, 
     end)
 end
 
--- Инициализация ползунков
-CreateSlider(RangeSliderFrame, RangeSliderBar, RangeSliderButton, RangeSliderLabel, UICornerRSF, UICornerRSB, UICornerRSBtn, "Range (Distance)", 285, _G.KillAuraRange, 5, 50, false)
-CreateSlider(DelaySliderFrame, DelaySliderBar, DelaySliderButton, DelaySliderLabel, UICornerDSF, UICornerDSB, UICornerDSBtn, "Attack Delay (Sec)", 325, _G.KillAuraDelay, 0.01, 0.5, true)
+-- Инициализация ползунков (Добавлен ползунок для Speedhack)
+CreateSlider(RangeSliderFrame, RangeSliderBar, RangeSliderButton, RangeSliderLabel, UICornerRSF, UICornerRSB, UICornerRSBtn, "Range (Distance)", 285, _G.KillAuraRange, 5, 50, "Integer")
+CreateSlider(DelaySliderFrame, DelaySliderBar, DelaySliderButton, DelaySliderLabel, UICornerDSF, UICornerDSB, UICornerDSBtn, "Attack Delay (Sec)", 325, _G.KillAuraDelay, 0.01, 0.5, "Decimal")
+CreateSlider(SpeedSliderFrame, SpeedSliderBar, SpeedSliderButton, SpeedSliderLabel, UICornerSSF, UICornerSSB, UICornerSSBtn, "Speed Value", 365, _G.SpeedValue, 16, 150, "Speed")
 
--- КНОПКИ ЦВЕТА
+-- КНОПКИ ЦВЕТА (Сдвинуты вниз по координате Y)
 BgColorButton.Name = "BgColorButton"
 BgColorButton.Parent = ContentContainer
 BgColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-BgColorButton.Position = UDim2.new(0, 10, 0, 375)
+BgColorButton.Position = UDim2.new(0, 10, 0, 415)
 BgColorButton.Size = UDim2.new(0, 140, 0, 30)
 BgColorButton.Font = Enum.Font.SourceSansBold
 BgColorButton.Text = "BG COLOR"
@@ -221,7 +235,7 @@ UICornerBgBtn.Parent = BgColorButton
 TxtColorButton.Name = "TxtColorButton"
 TxtColorButton.Parent = ContentContainer
 TxtColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-TxtColorButton.Position = UDim2.new(0, 10, 0, 410)
+TxtColorButton.Position = UDim2.new(0, 10, 0, 450)
 TxtColorButton.Size = UDim2.new(0, 140, 0, 30)
 TxtColorButton.Font = Enum.Font.SourceSansBold
 TxtColorButton.Text = "TXT COLOR"
@@ -238,6 +252,7 @@ PaletteFrame.Size = UDim2.new(0, 110, 0, 140)
 PaletteFrame.Visible = false
 PaletteCorner.CornerRadius = UDim.new(0, 6)
 PaletteCorner.Parent = PaletteFrame
+
 UIGridLayout.Parent = PaletteFrame
 UIGridLayout.CellPadding = UDim2.new(0, 5, 0, 5)
 UIGridLayout.CellSize = UDim2.new(0, 30, 0, 30)
@@ -250,6 +265,7 @@ local PopularColors = {
     Color3.fromRGB(0, 255, 255), Color3.fromRGB(255, 0, 255), Color3.fromRGB(255, 165, 0),
     Color3.fromRGB(128, 0, 128), Color3.fromRGB(255, 192, 203), Color3.fromRGB(170, 255, 0)
 }
+
 local currentTargetMode = "None"
 
 for _, color in ipairs(PopularColors) do
@@ -274,6 +290,7 @@ for _, color in ipairs(PopularColors) do
             SpeedButton.TextColor3 = color
             RangeSliderLabel.TextColor3 = color
             DelaySliderLabel.TextColor3 = color
+            SpeedSliderLabel.TextColor3 = color
             BgColorButton.TextColor3 = color
             TxtColorButton.TextColor3 = color
         end
@@ -419,7 +436,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- ПОТОК SPEEDHACK (Синхронизировано на основе файла спидхак.docx)
+-- ПОТОК SPEEDHACK
 RunService.Heartbeat:Connect(function()
     if _G.SpeedActive and LocalPlayer.Character then
         local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
@@ -429,7 +446,8 @@ RunService.Heartbeat:Connect(function()
     else
         if LocalPlayer.Character then
             local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid and humanoid.WalkSpeed == _G.SpeedValue then
+            -- Возвращаем базовую скорость 16, если хак отключен
+            if humanoid and humanoid.WalkSpeed ~= 16 then
                 humanoid.WalkSpeed = 16
             end
         end
@@ -524,7 +542,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ИСПРАВЛЕННЫЙ И РАБОЧИЙ ПОТОК КИЛЛАУРЫ
+-- ПОТОК КИЛЛАУРЫ
 task.spawn(function()
     while true do
         task.wait(_G.KillAuraDelay)
@@ -548,13 +566,11 @@ task.spawn(function()
                             local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
                             
                             if distance <= _G.KillAuraRange and humanoid and humanoid.Health > 0 then
-                                -- Безопасный вызов анимации взмаха (проверка на существование ивента)
                                 local stabRemote = knife:FindFirstChild("Stab") or knife:FindFirstChild("StabServer")
                                 if stabRemote and stabRemote:IsA("RemoteEvent") then
                                     stabRemote:FireServer()
                                 end
                                 
-                                -- Симуляция физического касания хитбокса (Исправлено название функции)
                                 if firetouchinterest then
                                     firetouchinterest(handle, targetHrp, 0)
                                     firetouchinterest(handle, targetHrp, 1)
