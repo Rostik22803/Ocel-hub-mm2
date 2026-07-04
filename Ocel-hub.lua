@@ -163,7 +163,7 @@ _G.SpeedValue = 40[cite: 1]
 _G.KillAuraRange = 15[cite: 1]
 _G.KillAuraDelay = 0.1[cite: 1]
 
--- Кнопки стилей внутри Dropdown (Обновленные названия и новые режимы)
+-- Кнопки стилей внутри Dropdown
 local ChamStyles = {"Box", "Wireframe", "Outline Borders", "Highlight Mesh", "Glow Outline"}
 for i, styleName in ipairs(ChamStyles) do
     local StyleBtn = Instance.new("TextButton")
@@ -182,7 +182,6 @@ for i, styleName in ipairs(ChamStyles) do
         _G.ChamsType = styleName
         ChamsDropdownFrame:TweenSize(UDim2.new(0, 140, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.15, true)
         
-        -- Динамическое обновление текста кнопки при смене стиля
         if _G.ChamsActive then
             ChamsButton.Text = "CHAMS: ON (" .. styleName .. ")"
         end
@@ -192,7 +191,6 @@ end
 -- Открытие/закрытие списка стилей
 ChamsButton.MouseButton1Down:Connect(function()
     if ChamsDropdownFrame.Size.Y.Offset == 0 then
-        -- Рассчитываем высоту под 5 элементов
         ChamsDropdownFrame:TweenSize(UDim2.new(0, 140, 0, 128), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.15, true)
     else
         ChamsDropdownFrame:TweenSize(UDim2.new(0, 140, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.15, true)
@@ -418,7 +416,7 @@ local function GetRole(player)[cite: 1]
     return "Innocent"[cite: 1]
 end[cite: 1]
 
--- Функция полной и чистой очистки чамсов
+-- Функция полной очистки чамсов
 local function ClearChams(object)
     if not object then return end
     for _, obj in ipairs(object:GetDescendants()) do
@@ -428,9 +426,8 @@ local function ClearChams(object)
     end
 end
 
--- Функция генерации чамсов с полным фиксом наслоения
+-- Функция генерации чамсов
 local function ApplyChamObject(part, color)
-    -- Очищаем парты перед накладыванием нового стиля
     for _, old in ipairs(part:GetChildren()) do
         if old.Name == "MM2_ChamInstance" then old:Destroy() end
     end
@@ -447,7 +444,6 @@ local function ApplyChamObject(part, color)
         box.Parent = part
         
     elseif _G.ChamsType == "Wireframe" then
-        -- НАСТОЯЩИЙ ВАРФРЕЙМ: Заливка персонажа + 3D сетка поверх ребер
         local box = Instance.new("BoxHandleAdornment")
         box.Name = "MM2_ChamInstance"
         box.Size = part.Size + Vector3.new(0.01, 0.01, 0.01)
@@ -455,20 +451,19 @@ local function ApplyChamObject(part, color)
         box.ZIndex = 5
         box.Adornee = part
         box.Color3 = color
-        box.Transparency = 0.65 -- Полупрозрачная заливка тела
+        box.Transparency = 0.65
         box.Parent = part
         
         local selection = Instance.new("SelectionBox")
         selection.Name = "MM2_ChamInstance"
         selection.Color3 = color
         selection.SurfaceColor3 = color
-        selection.SurfaceTransparency = 1 -- Прозрачные грани сетки
-        selection.Transparency = 0 -- Яркие ребра (линии) сетки
+        selection.SurfaceTransparency = 1
+        selection.Transparency = 0
         selection.Adornee = part
         selection.Parent = part
 
     elseif _G.ChamsType == "Outline Borders" then
-        -- Только сетка по контуру без сплошного цвета внутри
         local selection = Instance.new("SelectionBox")
         selection.Name = "MM2_ChamInstance"
         selection.Color3 = color
@@ -493,12 +488,11 @@ local function ApplyChamObject(part, color)
     end
 end
 
--- Основной цикл рендеринга чамсов (Игроки + Пистолет на полу)
+-- Основной цикл рендеринга чамсов
 task.spawn(function()
     while true do
         task.wait(0.2)
         if _G.ChamsActive then
-            -- Чамсы на игроков
             for _, player in ipairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer and player.Character then
                     local role = GetRole(player)
@@ -509,7 +503,6 @@ task.spawn(function()
                             ApplyChamObject(player.Character, color)
                         end
                     else
-                        -- Перед переключением с Highlight чистим модельку
                         if player.Character:FindFirstChild("MM2_ChamInstance") then 
                             player.Character.MM2_ChamInstance:Destroy() 
                         end
@@ -522,7 +515,6 @@ task.spawn(function()
                 end
             end
             
-            -- Чамсы на выпавший пистолет (GunDrop)
             local drop = workspace:FindFirstChild("GunDrop")
             if drop then
                 if _G.ChamsType == "Highlight Mesh" or _G.ChamsType == "Glow Outline" then
@@ -706,18 +698,15 @@ task.spawn(function()[cite: 1]
     end[cite: 1]
 end)[cite: 1]
 
--- ОБРАБОТКА НАЖАТИЙ КНОПКИ CHAMS (ФИКС ЧЕКБОКСА)
+-- ОБРАБОТКА НАЖАТИЙ КНОПКИ CHAMS
 ChamsButton.MouseButton1Click:Connect(function()
     _G.ChamsActive = not _G.ChamsActive
-    
     if _G.ChamsActive then
         ChamsButton.Text = "CHAMS: ON (" .. _G.ChamsType .. ")"
         ChamsButton.BackgroundColor3 = Color3.fromRGB(60, 255, 60)
     else
         ChamsButton.Text = "CHAMS: OFF"
         ChamsButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-        
-        -- Полное принудительное уничтожение визуалов во избежание багов
         for _, player in ipairs(Players:GetPlayers()) do 
             if player.Character then ClearChams(player.Character) end 
         end
@@ -726,10 +715,39 @@ ChamsButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Остальные кнопки[cite: 1]
-AimButton.MouseButton1Click:Connect(function() _G.SilentAimActive = not _G.SilentAimActive AimButton.Text = _G.SilentAimActive and "AIM: ON" or "AIM: OFF" AimButton.BackgroundColor3 = _G.SilentAimActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60) end)[cite: 1]
-NoclipButton.MouseButton1Click:Connect(function() _G.NoclipActive = not _G.NoclipActive NoclipButton.Text = _G.NoclipActive and "NOCLIP: ON" or "NOCLIP: OFF" NoclipButton.BackgroundColor3 = _G.NoclipActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60) end)[cite: 1]
-AntiFlingButton.MouseButton1Click:Connect(function() _G.AntiFlingActive = not _G.AntiFlingActive AntiFlingButton.Text = _G.AntiFlingActive and "ANTI-FLING: ON" or "ANTI-FLING: OFF" AntiFlingButton.BackgroundColor3 = _G.AntiFlingActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60) end)[cite: 1]
-PickupButton.MouseButton1Click:Connect(function() _G.AutoPickupActive = not _G.AutoPickupActive PickupButton.Text = _G.AutoPickupActive and "AUTOPICKUP: ON" or "AUTOPICKUP: OFF" PickupButton.BackgroundColor3 = _G.AutoPickupActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60) end)[cite: 1]
-KillAuraButton.MouseButton1Click:Connect(function() _G.KillAuraActive = not _G.KillAuraActive KillAuraButton.Text = _G.KillAuraActive and "KILL AURA: ON" or "KILL AURA: OFF" KillAuraButton.BackgroundColor3 = _G.KillAuraActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60) end)[cite: 1]
-SpeedButton.MouseButton1Click:Connect(function() _G.SpeedActive = not _G.SpeedActive SpeedButton.Text = _G.SpeedActive and "SPEEDHACK: ON" or "SPEEDHACK: OFF" SpeedButton.BackgroundColor3 = _G.SpeedActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60) end)[cite: 1]
+-- ИСПРАВЛЕННЫЙ СИНТАКСИС ОБРАБОТЧИКОВ (ОТДЕЛЬНЫЕ СТРОКИ)
+AimButton.MouseButton1Click:Connect(function()
+    _G.SilentAimActive = not _G.SilentAimActive
+    AimButton.Text = _G.SilentAimActive and "AIM: ON" or "AIM: OFF"
+    AimButton.BackgroundColor3 = _G.SilentAimActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
+end)
+
+NoclipButton.MouseButton1Click:Connect(function()
+    _G.NoclipActive = not _G.NoclipActive
+    NoclipButton.Text = _G.NoclipActive and "NOCLIP: ON" or "NOCLIP: OFF"
+    NoclipButton.BackgroundColor3 = _G.NoclipActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
+end)
+
+AntiFlingButton.MouseButton1Click:Connect(function()
+    _G.AntiFlingActive = not _G.AntiFlingActive
+    AntiFlingButton.Text = _G.AntiFlingActive and "ANTI-FLING: ON" or "ANTI-FLING: OFF"
+    AntiFlingButton.BackgroundColor3 = _G.AntiFlingActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
+end)
+
+PickupButton.MouseButton1Click:Connect(function()
+    _G.AutoPickupActive = not _G.AutoPickupActive
+    PickupButton.Text = _G.AutoPickupActive and "AUTOPICKUP: ON" or "AUTOPICKUP: OFF"
+    PickupButton.BackgroundColor3 = _G.AutoPickupActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
+end)
+
+KillAuraButton.MouseButton1Click:Connect(function()
+    _G.KillAuraActive = not _G.KillAuraActive
+    KillAuraButton.Text = _G.KillAuraActive and "KILL AURA: ON" or "KILL AURA: OFF"
+    KillAuraButton.BackgroundColor3 = _G.KillAuraActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
+end)
+
+SpeedButton.MouseButton1Click:Connect(function()
+    _G.SpeedActive = not _G.SpeedActive
+    SpeedButton.Text = _G.SpeedActive and "SPEEDHACK: ON" or "SPEEDHACK: OFF"
+    SpeedButton.BackgroundColor3 = _G.SpeedActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
+end)
