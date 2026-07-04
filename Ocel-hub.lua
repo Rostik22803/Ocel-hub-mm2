@@ -5,6 +5,12 @@ local UICornerFrame = Instance.new("UICorner")
 -- Кнопки функций
 local ChamsButton = Instance.new("TextButton")
 local UICornerChams = Instance.new("UICorner")
+
+-- ЭЛЕМЕНТЫ ВЫПАДАЮЩЕГО МЕНЮ (DROPDOWN) ДЛЯ ЧАМСОВ
+local ChamsDropdownFrame = Instance.new("Frame")
+local ChamsDropdownLayout = Instance.new("UIListLayout")
+local ChamsDropdownCorner = Instance.new("UICorner")
+
 local AimButton = Instance.new("TextButton")
 local UICornerAim = Instance.new("UICorner")
 local NoclipButton = Instance.new("TextButton")
@@ -59,11 +65,11 @@ local PaletteFrame = Instance.new("Frame")
 local UIGridLayout = Instance.new("UIGridLayout")
 local PaletteCorner = Instance.new("UICorner")
 
-ScreenGui.Name = "MM2_Ultimate_v5"
+ScreenGui.Name = "MM2_Ultimate_v6"
 ScreenGui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
--- ГЛАВНОЕ МЕНЮ (Высота увеличена для размещения нового ползунка)
+-- ГЛАВНОЕ МЕНЮ (Высота адаптирована)
 local MainFrameHeight = 585
 Frame.Parent = ScreenGui
 Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -119,7 +125,25 @@ local function ApplyButtonStyles(btn, corner, text, yPos)
     corner.Parent = btn
 end
 
+-- Распределяем элементы по вертикали (Y) с учетом Dropdown
 ApplyButtonStyles(ChamsButton, UICornerChams, "CHAMS", 0)
+
+-- Настройка выпадающего списка стилей чамсов
+ChamsDropdownFrame.Name = "ChamsDropdownFrame"
+ChamsDropdownFrame.Parent = ContentContainer
+ChamsDropdownFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ChamsDropdownFrame.Position = UDim2.new(0, 10, 0, 38)
+ChamsDropdownFrame.Size = UDim2.new(0, 140, 0, 0) -- По умолчанию скрыто (высота 0)
+ChamsDropdownFrame.ClipsDescendants = true
+ChamsDropdownFrame.ZIndex = 10
+
+ChamsDropdownLayout.Parent = ChamsDropdownFrame
+ChamsDropdownLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ChamsDropdownLayout.Padding = UDim.new(0, 2)
+
+ChamsDropdownCorner.CornerRadius = UDim.new(0, 6)
+ChamsDropdownCorner.Parent = ChamsDropdownFrame
+
 ApplyButtonStyles(AimButton, UICornerAim, "AIM", 40)
 ApplyButtonStyles(NoclipButton, UICornerNoclip, "NOCLIP", 80)
 ApplyButtonStyles(AntiFlingButton, UICornerFling, "ANTI-FLING", 120)
@@ -129,16 +153,47 @@ ApplyButtonStyles(SpeedButton, UICornerSpeed, "SPEEDHACK", 240)
 
 -- НАСТРОЙКИ ФУНКЦИЙ ГЕЙМПЛЕЯ И ДЕФОЛТЫ
 _G.ChamsActive = false
+_G.ChamsType = "Box" -- Дефолтный тип: "Box", "Wireframe", "Highlight Mesh", "Glow Outline"
 _G.SilentAimActive = false
 _G.NoclipActive = false
 _G.AntiFlingActive = false
 _G.AutoPickupActive = false
 _G.KillAuraActive = false
 _G.SpeedActive = false
-
-_G.SpeedValue = 40        -- Скорость по умолчанию
+_G.SpeedValue = 40        
 _G.KillAuraRange = 15     
 _G.KillAuraDelay = 0.1    
+
+-- Создание кнопок внутри Dropdown
+local ChamStyles = {"Box", "Wireframe", "Highlight Mesh", "Glow Outline"}
+for i, styleName in ipairs(ChamStyles) do
+    local StyleBtn = Instance.new("TextButton")
+    StyleBtn.Name = styleName .. "Btn"
+    StyleBtn.Parent = ChamsDropdownFrame
+    StyleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    StyleBtn.Size = UDim2.new(1, 0, 0, 25)
+    StyleBtn.Font = Enum.Font.SourceSansBold
+    StyleBtn.Text = styleName
+    StyleBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    StyleBtn.TextSize = 12
+    StyleBtn.ZIndex = 11
+    Instance.new("UICorner", StyleBtn).CornerRadius = UDim.new(0, 4)
+    
+    StyleBtn.MouseButton1Click:Connect(function()
+        _G.ChamsType = styleName
+        ChamsButton.Text = "CHAMS: ON (" .. styleName .. ")"
+        ChamsDropdownFrame:TweenSize(UDim2.new(0, 140, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+    end)
+end
+
+-- Логика открытия/закрытия выпадающего списка
+ChamsButton.MouseButton1Down:Connect(function()
+    if ChamsDropdownFrame.Size.Y.Offset == 0 then
+        ChamsDropdownFrame:TweenSize(UDim2.new(0, 140, 0, 106), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+    else
+        ChamsDropdownFrame:TweenSize(UDim2.new(0, 140, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
+    end
+end)
 
 -- ФУНКЦИЯ СОЗДАНИЯ И СТАБИЛИЗАЦИИ ПОЛЗУНКОВ
 local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, btnCorner, text, yPos, currentVal, minVal, maxVal, sliderType)
@@ -214,12 +269,12 @@ local function CreateSlider(bgFrame, barFrame, btn, label, bgCorner, barCorner, 
     end)
 end
 
--- Инициализация ползунков (Добавлен ползунок для Speedhack)
+-- Инициализация ползунков
 CreateSlider(RangeSliderFrame, RangeSliderBar, RangeSliderButton, RangeSliderLabel, UICornerRSF, UICornerRSB, UICornerRSBtn, "Range (Distance)", 285, _G.KillAuraRange, 5, 50, "Integer")
 CreateSlider(DelaySliderFrame, DelaySliderBar, DelaySliderButton, DelaySliderLabel, UICornerDSF, UICornerDSB, UICornerDSBtn, "Attack Delay (Sec)", 325, _G.KillAuraDelay, 0.01, 0.5, "Decimal")
 CreateSlider(SpeedSliderFrame, SpeedSliderBar, SpeedSliderButton, SpeedSliderLabel, UICornerSSF, UICornerSSB, UICornerSSBtn, "Speed Value", 365, _G.SpeedValue, 16, 150, "Speed")
 
--- КНОПКИ ЦВЕТА (Сдвинуты вниз по координате Y)
+-- КНОПКИ ЦВЕТА
 BgColorButton.Name = "BgColorButton"
 BgColorButton.Parent = ContentContainer
 BgColorButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
@@ -252,7 +307,6 @@ PaletteFrame.Size = UDim2.new(0, 110, 0, 140)
 PaletteFrame.Visible = false
 PaletteCorner.CornerRadius = UDim.new(0, 6)
 PaletteCorner.Parent = PaletteFrame
-
 UIGridLayout.Parent = PaletteFrame
 UIGridLayout.CellPadding = UDim2.new(0, 5, 0, 5)
 UIGridLayout.CellSize = UDim2.new(0, 30, 0, 30)
@@ -265,9 +319,7 @@ local PopularColors = {
     Color3.fromRGB(0, 255, 255), Color3.fromRGB(255, 0, 255), Color3.fromRGB(255, 165, 0),
     Color3.fromRGB(128, 0, 128), Color3.fromRGB(255, 192, 203), Color3.fromRGB(170, 255, 0)
 }
-
 local currentTargetMode = "None"
-
 for _, color in ipairs(PopularColors) do
     local ColorBtn = Instance.new("TextButton")
     ColorBtn.Text = ""
@@ -325,6 +377,7 @@ CollapseButton.MouseButton1Click:Connect(function()
     if MenuCollapsed then
         ContentContainer.Visible = false
         PaletteFrame.Visible = false
+        ChamsDropdownFrame.Size = UDim2.new(0, 140, 0, 0)
         currentTargetMode = "None"
         Frame:TweenSize(UDim2.new(0, 160, 0, 35), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.2, true)
         CollapseButton.Text = "+"
@@ -339,7 +392,8 @@ end)
 local Colors = {
     Murderer = Color3.fromRGB(255, 0, 0),
     Sheriff  = Color3.fromRGB(0, 120, 255),
-    Innocent = Color3.fromRGB(0, 255, 0)
+    Innocent = Color3.fromRGB(0, 255, 0),
+    GunDrop  = Color3.fromRGB(180, 0, 255) -- Фиолетовый для пистолета
 }
 
 local Players = game:GetService("Players")
@@ -361,41 +415,88 @@ local function GetRole(player)
     return "Innocent"
 end
 
-local function ClearChams(char)
-    if char then
-        for _, obj in ipairs(char:GetDescendants()) do
-            if obj.Name == "MM2_BoxCham" then obj:Destroy() end
+-- Полная очистка всех видов чамсов
+local function ClearChams(object)
+    if not object then return end
+    for _, obj in ipairs(object:GetDescendants()) do
+        if obj.Name == "MM2_Cham" then 
+            obj:Destroy() 
         end
     end
 end
 
-local function CreateBoxCham(part, color)
-    if part:FindFirstChild("MM2_BoxCham") then return end
-    local box = Instance.new("BoxHandleAdornment")
-    box.Name = "MM2_BoxCham"
-    box.Size = part.Size + Vector3.new(0.04, 0.04, 0.04)
-    box.AlwaysOnTop = true
-    box.ZIndex = 5
-    box.Adornee = part
-    box.Color3 = color
-    box.Transparency = 0.5
-    box.Parent = part
+-- Умная функция генерации чамсов в зависимости от настроек
+local function ApplyChamObject(part, color)
+    ClearChams(part) -- Защита от наслоения
+    
+    if _G.ChamsType == "Box" then
+        local box = Instance.new("BoxHandleAdornment")
+        box.Name = "MM2_Cham"
+        box.Size = part.Size + Vector3.new(0.02, 0.02, 0.02)
+        box.AlwaysOnTop = true
+        box.ZIndex = 5
+        box.Adornee = part
+        box.Color3 = color
+        box.Transparency = 0.5
+        box.Parent = part
+        
+    elseif _G.ChamsType == "Wireframe" then
+        local box = Instance.new("BoxHandleAdornment")
+        box.Name = "MM2_Cham"
+        box.Size = part.Size + Vector3.new(0.02, 0.02, 0.02)
+        box.AlwaysOnTop = true
+        box.ZIndex = 5
+        box.Adornee = part
+        box.Color3 = color
+        box.Transparency = 0.85
+        box.Parent = part
+        
+        local selection = Instance.new("SelectionBox")
+        selection.Name = "MM2_Cham"
+        selection.Color3 = color
+        selection.Adornee = part
+        selection.Parent = part
+
+    elseif _G.ChamsType == "Highlight Mesh" or _G.ChamsType == "Glow Outline" then
+        -- Накладываем Highlight на модель верхнего уровня (персонаж или пистолет)
+        local model = part:FindFirstAncestorOfClass("Model") or part:FindFirstAncestorOfClass("Tool") or part
+        if model and not model:FindFirstChild("MM2_Cham") then
+            local highlight = Instance.new("Highlight")
+            highlight.Name = "MM2_Cham"
+            highlight.FillColor = color
+            highlight.OutlineColor = color
+            highlight.FillTransparency = (_G.ChamsType == "Glow Outline") and 1 or 0.3
+            highlight.OutlineTransparency = 0
+            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            highlight.Parent = model
+        end
+    end
 end
 
--- Поток Чамсов
+-- Поток Чамсов (Игроки + Выпавший пистолет)
 task.spawn(function()
     while true do
         task.wait(0.3)
         if _G.ChamsActive then
+            -- Чамсы игроков
             for _, player in ipairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer and player.Character then
                     local role = GetRole(player)
                     local color = Colors[role]
                     for _, part in ipairs(player.Character:GetChildren()) do
                         if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                            local existingCham = part:FindFirstChild("MM2_BoxCham")
-                            if existingCham then existingCham.Color3 = color else CreateBoxCham(part, color) end
+                            ApplyChamObject(part, color)
                         end
+                    end
+                end
+            end
+            
+            -- Чамсы на выпавший пистолет (GunDrop)
+            local drop = workspace:FindFirstChild("GunDrop")
+            if drop then
+                for _, part in ipairs(drop:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        ApplyChamObject(part, Colors.GunDrop)
                     end
                 end
             end
@@ -440,16 +541,11 @@ end)
 RunService.Heartbeat:Connect(function()
     if _G.SpeedActive and LocalPlayer.Character then
         local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            humanoid.WalkSpeed = _G.SpeedValue
-        end
+        if humanoid then humanoid.WalkSpeed = _G.SpeedValue end
     else
         if LocalPlayer.Character then
             local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            -- Возвращаем базовую скорость 16, если хак отключен
-            if humanoid and humanoid.WalkSpeed ~= 16 then
-                humanoid.WalkSpeed = 16
-            end
+            if humanoid and humanoid.WalkSpeed ~= 16 then humanoid.WalkSpeed = 16 end
         end
     end
 end)
@@ -546,31 +642,21 @@ end)
 task.spawn(function()
     while true do
         task.wait(_G.KillAuraDelay)
-        
         if _G.KillAuraActive and GetRole(LocalPlayer) == "Murderer" and LocalPlayer.Character then
             local knife = LocalPlayer.Character:FindFirstChild("Knife") or LocalPlayer.Backpack:FindFirstChild("Knife")
-            
             if knife then
-                if knife.Parent == LocalPlayer.Backpack then
-                    knife.Parent = LocalPlayer.Character
-                end
-                
+                if knife.Parent == LocalPlayer.Backpack then knife.Parent = LocalPlayer.Character end
                 local handle = knife:FindFirstChild("Handle")
                 local myHrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                
                 if myHrp and handle then
                     for _, player in ipairs(Players:GetPlayers()) do
                         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                             local targetHrp = player.Character.HumanoidRootPart
                             local distance = (myHrp.Position - targetHrp.Position).Magnitude
                             local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-                            
                             if distance <= _G.KillAuraRange and humanoid and humanoid.Health > 0 then
                                 local stabRemote = knife:FindFirstChild("Stab") or knife:FindFirstChild("StabServer")
-                                if stabRemote and stabRemote:IsA("RemoteEvent") then
-                                    stabRemote:FireServer()
-                                end
-                                
+                                if stabRemote and stabRemote:IsA("RemoteEvent") then stabRemote:FireServer() end
                                 if firetouchinterest then
                                     firetouchinterest(handle, targetHrp, 0)
                                     firetouchinterest(handle, targetHrp, 1)
@@ -587,10 +673,12 @@ end)
 -- ОБРАБОТКА НАЖАТИЙ КНОПОК
 ChamsButton.MouseButton1Click:Connect(function()
     _G.ChamsActive = not _G.ChamsActive
-    ChamsButton.Text = _G.ChamsActive and "CHAMS: ON" or "CHAMS: OFF"
+    ChamsButton.Text = _G.ChamsActive and "CHAMS: ON (".._G.ChamsType..")" or "CHAMS: OFF"
     ChamsButton.BackgroundColor3 = _G.ChamsActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
     if not _G.ChamsActive then
         for _, player in ipairs(Players:GetPlayers()) do if player.Character then ClearChams(player.Character) end end
+        local drop = workspace:FindFirstChild("GunDrop")
+        if drop then ClearChams(drop) end
     end
 end)
 
@@ -599,31 +687,26 @@ AimButton.MouseButton1Click:Connect(function()
     AimButton.Text = _G.SilentAimActive and "AIM: ON" or "AIM: OFF"
     AimButton.BackgroundColor3 = _G.SilentAimActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
 end)
-
 NoclipButton.MouseButton1Click:Connect(function()
     _G.NoclipActive = not _G.NoclipActive
     NoclipButton.Text = _G.NoclipActive and "NOCLIP: ON" or "NOCLIP: OFF"
     NoclipButton.BackgroundColor3 = _G.NoclipActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
 end)
-
 AntiFlingButton.MouseButton1Click:Connect(function()
     _G.AntiFlingActive = not _G.AntiFlingActive
     AntiFlingButton.Text = _G.AntiFlingActive and "ANTI-FLING: ON" or "ANTI-FLING: OFF"
     AntiFlingButton.BackgroundColor3 = _G.AntiFlingActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
 end)
-
 PickupButton.MouseButton1Click:Connect(function()
     _G.AutoPickupActive = not _G.AutoPickupActive
     PickupButton.Text = _G.AutoPickupActive and "AUTOPICKUP: ON" or "AUTOPICKUP: OFF"
     PickupButton.BackgroundColor3 = _G.AutoPickupActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
 end)
-
 KillAuraButton.MouseButton1Click:Connect(function()
     _G.KillAuraActive = not _G.KillAuraActive
     KillAuraButton.Text = _G.KillAuraActive and "KILL AURA: ON" or "KILL AURA: OFF"
     KillAuraButton.BackgroundColor3 = _G.KillAuraActive and Color3.fromRGB(60, 255, 60) or Color3.fromRGB(255, 60, 60)
 end)
-
 SpeedButton.MouseButton1Click:Connect(function()
     _G.SpeedActive = not _G.SpeedActive
     SpeedButton.Text = _G.SpeedActive and "SPEEDHACK: ON" or "SPEEDHACK: OFF"
